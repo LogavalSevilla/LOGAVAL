@@ -1,5 +1,5 @@
+import Image from "next/image";
 import Link from "next/link";
-import Logo from "./Logo";
 
 const NAV_LINKS = [
   { href: "#nosotros", label: "Sobre nosotros" },
@@ -13,7 +13,14 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b border-navy/10 bg-cream/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-10">
         <Link href="#inicio">
-          <Logo className="scale-90" />
+          <Image
+            src="/images/logo.png"
+            alt="LOGAVAL Export Trading"
+            width={630}
+            height={184}
+            priority
+            className="h-10 w-auto"
+          />
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (
