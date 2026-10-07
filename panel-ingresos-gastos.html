@@ -1,0 +1,372 @@
+<title>Panel Logaval</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: cabecera + 4 indicadores, gráficos a la izquierda, formulario fijo a la derecha, tablas debajo */
+:root{
+  --bg:#eef2f2; --surface:#ffffff; --fg:#10201f; --muted:#5b6f6d; --line:#d5dfde;
+  --accent:#0e6b66; --accent-fg:#ffffff; --in:#0e7f78; --out:#c27a12; --bad:#b3372c; --soft:#e2ecea;
+  --display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
+  --body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1717; --surface:#142423; --fg:#e4efed; --muted:#8fa7a4; --line:#264240;
+  --accent:#3cb8af; --accent-fg:#06201e; --in:#3cb8af; --out:#e5a23d; --bad:#ef7a6e; --soft:#1b3231; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1717; --surface:#142423; --fg:#e4efed; --muted:#8fa7a4; --line:#264240;
+  --accent:#3cb8af; --accent-fg:#06201e; --in:#3cb8af; --out:#e5a23d; --bad:#ef7a6e; --soft:#1b3231; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:20px 40px}
+*{box-sizing:border-box}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+h1{font-family:var(--display);font-size:26px;line-height:1.1;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:4px 0 0}
+h2{font-family:var(--display);font-size:16px;margin:0;font-weight:600}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+select,input{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:0;width:100%}
+.filters select{width:auto}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.kpi .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.kpi .v{font-family:var(--display);font-size:26px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kpi .n{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.kpi.main{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.kpi.main .l,.kpi.main .n{color:inherit;opacity:.8}
+.neg{color:var(--bad)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+.panel-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.legend{display:flex;gap:14px;color:var(--muted);font-size:12px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--muted);font-family:var(--body);font-size:11px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(80px,120px) 1fr auto;gap:10px;align-items:center;font-size:13px}
+.bar .t{height:10px;background:var(--soft);border-radius:3px;overflow:hidden}
+.bar .t b{display:block;height:100%;border-radius:3px}
+.bar span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.empty{color:var(--muted);padding:8px 0}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:8px;padding:3px;gap:3px;margin-bottom:14px}
+.seg button{border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;padding:8px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg)}
+.seg button[aria-pressed="true"].in{color:var(--in)}
+.seg button[aria-pressed="true"].out{color:var(--out)}
+form{display:flex;flex-direction:column;gap:10px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:500}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:flex;gap:8px;margin-top:4px}
+.btn{font:inherit;font-weight:600;border-radius:6px;padding:9px 14px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-fg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+.btn.small{padding:4px 9px;font-size:12px}
+.btn.danger{color:var(--bad);border-color:var(--bad);background:transparent}
+.sticky{position:sticky;top:12px}
+.msg{min-height:18px;font-size:12px;color:var(--muted)}
+.msg.err{color:var(--bad)}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.tools input{width:200px}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--line);font-weight:600}
+td{padding:9px 8px;border-bottom:1px solid var(--line)}
+th.num,td.num{text-align:right}
+td.acts{text-align:right;white-space:nowrap}
+.pill{display:inline-block;background:var(--soft);border-radius:99px;padding:2px 9px;font-size:12px}
+.tabs2{display:flex;gap:6px}
+.tabs2 button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:99px;padding:5px 14px;cursor:pointer;font-weight:600}
+.tabs2 button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.note{color:var(--muted);font-size:12px}
+@media (prefers-reduced-motion:no-preference){.bar .t b{transition:width .3s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Panel de ingresos y gastos</h1>
+      <p class="sub">LOGAVAL EXPORT TRADING, SLU · agencia comercial cerámica</p>
+    </div>
+    <div class="filters">
+      <select id="fYear" aria-label="Año"></select>
+      <select id="fPeriod" aria-label="Periodo">
+        <option value="all">Todo el año</option>
+        <option value="q1">T1 (ene–mar)</option><option value="q2">T2 (abr–jun)</option>
+        <option value="q3">T3 (jul–sep)</option><option value="q4">T4 (oct–dic)</option>
+        <optgroup label="Mes">
+          <option value="m0">Enero</option><option value="m1">Febrero</option><option value="m2">Marzo</option>
+          <option value="m3">Abril</option><option value="m4">Mayo</option><option value="m5">Junio</option>
+          <option value="m6">Julio</option><option value="m7">Agosto</option><option value="m8">Septiembre</option>
+          <option value="m9">Octubre</option><option value="m10">Noviembre</option><option value="m11">Diciembre</option>
+        </optgroup>
+      </select>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis" aria-label="Resumen"></section>
+
+  <div class="grid">
+    <div class="col">
+      <section class="panel">
+        <div class="panel-h">
+          <h2>Ingresos y gastos por mes (base sin IVA)</h2>
+          <div class="legend"><span><i style="background:var(--in)"></i>Ingresos</span><span><i style="background:var(--out)"></i>Gastos</span></div>
+        </div>
+        <div id="chart"></div>
+      </section>
+      <div class="two">
+        <section class="panel"><div class="panel-h"><h2>Ingresos por fabricante</h2></div><div class="bars" id="byMaker"></div></section>
+        <section class="panel"><div class="panel-h"><h2>Gastos por categoría</h2></div><div class="bars" id="byCat"></div></section>
+      </div>
+    </div>
+
+    <aside class="panel sticky" aria-label="Nueva factura">
+      <div class="seg" role="group" aria-label="Tipo de factura">
+        <button type="button" class="in" id="tabIn" aria-pressed="true">+ Ingreso</button>
+        <button type="button" class="out" id="tabOut" aria-pressed="false">− Gasto</button>
+      </div>
+      <form id="form" autocomplete="off">
+        <div class="row2">
+          <label>Nº factura<input id="fNum" required></label>
+          <label>Fecha factura<input id="fDate" type="date" required></label>
+        </div>
+        <label id="lblWho"><span id="whoText">Fabricante</span><input id="fWho" list="whoList" required></label>
+        <datalist id="whoList"></datalist>
+        <label id="lblCat" hidden>Categoría
+          <select id="fCat"></select>
+        </label>
+        <div class="row2">
+          <label>Importe base (€)<input id="fBase" type="number" step="0.01" min="0" inputmode="decimal" required></label>
+          <label>IVA (€)<input id="fIva" type="number" step="0.01" min="0" inputmode="decimal" value="0"></label>
+        </div>
+        <div class="msg" id="msg" role="status"></div>
+        <div class="actions">
+          <button class="btn" id="btnSave" type="submit">Guardar ingreso</button>
+          <button class="btn ghost" id="btnCancel" type="button" hidden>Cancelar</button>
+        </div>
+      </form>
+    </aside>
+  </div>
+
+  <section class="panel">
+    <div class="panel-h">
+      <div class="tabs2" role="group" aria-label="Listado">
+        <button type="button" id="lstIn" aria-pressed="true">Ingresos</button>
+        <button type="button" id="lstOut" aria-pressed="false">Gastos</button>
+      </div>
+      <div class="tools">
+        <input id="q" type="search" placeholder="Buscar nº, empresa, categoría…" aria-label="Buscar">
+        <button class="btn ghost small" id="btnCsv" type="button">Descargar CSV</button>
+      </div>
+    </div>
+    <div class="tablewrap"><table id="tbl"></table></div>
+    <p class="note" id="storeNote"></p>
+  </section>
+</div>
+
+<script>
+(function(){
+  var CATS=["Informática","Coche","Mensajería","Mercadería","Telefonía","Amazon","Viajes","Gestoría","Ferias y eventos","Seguros","Comisiones bancarias","Otros"];
+  var MONTHS=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  var state={ingresos:[],gastos:[],kind:"in",list:"in",editId:null,confirmId:null};
+  var db=null, LS="logaval-panel-v1";
+
+  var $=function(id){return document.getElementById(id)};
+  var eur=new Intl.NumberFormat("es-ES",{style:"currency",currency:"EUR"});
+  var eur0=new Intl.NumberFormat("es-ES",{style:"currency",currency:"EUR",maximumFractionDigits:0});
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+  function fdate(s){var p=(s||"").split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:s}
+  function nz(v){v=parseFloat(v);return isFinite(v)?v:0}
+
+  /* ---------- almacenamiento ---------- */
+  function lsLoad(){try{var d=JSON.parse(localStorage.getItem(LS)||"{}");state.ingresos=d.ingresos||[];state.gastos=d.gastos||[]}catch(e){}}
+  function lsSave(){try{localStorage.setItem(LS,JSON.stringify({ingresos:state.ingresos,gastos:state.gastos}))}catch(e){}}
+  function toRows(snap){return snap.docs.map(function(d){var o=Object.assign({},d.data());o.id=d.id;return o})}
+  function col(kind){return kind==="in"?"ingresos":"gastos"}
+
+  function save(kind,rec,id){
+    var name=col(kind);
+    if(db){
+      var c=db.collection(name);
+      return id?c.doc(id).set(rec):c.add(rec);
+    }
+    if(id){state[name]=state[name].map(function(r){return r.id===id?Object.assign({id:id},rec):r})}
+    else state[name].push(Object.assign({id:"l"+Date.now()},rec));
+    lsSave();render();return Promise.resolve();
+  }
+  function remove(kind,id){
+    var name=col(kind);
+    if(db)return db.collection(name).doc(id).delete();
+    state[name]=state[name].filter(function(r){return r.id!==id});lsSave();render();return Promise.resolve();
+  }
+
+  /* ---------- filtros ---------- */
+  function inPeriod(r){
+    var y=$("fYear").value,p=$("fPeriod").value,d=r.fecha||"";
+    if(d.slice(0,4)!==y)return false;
+    var m=parseInt(d.slice(5,7),10)-1;
+    if(p==="all")return true;
+    if(p[0]==="q")return Math.floor(m/3)===parseInt(p[1],10)-1;
+    return m===parseInt(p.slice(1),10);
+  }
+  function fillYears(){
+    var set={},now=new Date().getFullYear();set[now]=1;
+    state.ingresos.concat(state.gastos).forEach(function(r){if(r.fecha)set[r.fecha.slice(0,4)]=1});
+    var cur=$("fYear").value||String(now);
+    var ys=Object.keys(set).sort().reverse();
+    $("fYear").innerHTML=ys.map(function(y){return '<option'+(y===cur?' selected':'')+'>'+y+'</option>'}).join("");
+  }
+  function sum(arr,f){return arr.reduce(function(a,r){return a+nz(r[f])},0)}
+
+  /* ---------- render ---------- */
+  function render(){
+    fillYears();
+    var inc=state.ingresos.filter(inPeriod),exp=state.gastos.filter(inPeriod);
+    var bi=sum(inc,"base"),be=sum(exp,"base"),vi=sum(inc,"iva"),ve=sum(exp,"iva"),res=bi-be,ivaNet=vi-ve;
+    $("kpis").innerHTML=
+      '<div class="kpi"><div class="l">Ingresos (base)</div><div class="v">'+eur.format(bi)+'</div><div class="n">'+inc.length+' facturas · total con IVA '+eur.format(bi+vi)+'</div></div>'+
+      '<div class="kpi"><div class="l">Gastos (base)</div><div class="v">'+eur.format(be)+'</div><div class="n">'+exp.length+' facturas · total con IVA '+eur.format(be+ve)+'</div></div>'+
+      '<div class="kpi main"><div class="l">Resultado</div><div class="v">'+eur.format(res)+'</div><div class="n">Ingresos − gastos, sin IVA</div></div>'+
+      '<div class="kpi"><div class="l">IVA a ingresar</div><div class="v'+(ivaNet<0?' neg':'')+'">'+eur.format(ivaNet)+'</div><div class="n">Repercutido '+eur.format(vi)+' − soportado '+eur.format(ve)+'</div></div>';
+    renderChart();
+    renderBars("byMaker",group(inc,"fabricante"),"var(--in)","Aún no hay ingresos en este periodo.");
+    renderBars("byCat",group(exp,"categoria"),"var(--out)","Aún no hay gastos en este periodo.");
+    renderTable();
+    $("storeNote").textContent=db?"Los datos se guardan en la nube y se comparten con quien abra este panel.":"Los datos se guardan solo en este navegador.";
+  }
+  function group(arr,f){
+    var m={};arr.forEach(function(r){var k=r[f]||"Sin indicar";m[k]=(m[k]||0)+nz(r.base)});
+    return Object.keys(m).map(function(k){return[k,m[k]]}).sort(function(a,b){return b[1]-a[1]});
+  }
+  function renderBars(id,rows,color,emptyMsg){
+    var el=$(id);
+    if(!rows.length){el.innerHTML='<div class="empty">'+emptyMsg+'</div>';return}
+    var max=rows[0][1]||1;
+    el.innerHTML=rows.slice(0,8).map(function(r){
+      return '<div class="bar"><span title="'+esc(r[0])+'">'+esc(r[0])+'</span><span class="t"><b style="width:'+Math.max(2,r[1]/max*100)+'%;background:'+color+'"></b></span><span class="num">'+eur0.format(r[1])+'</span></div>';
+    }).join("");
+  }
+  function niceMax(v){if(v<=0)return 1000;var p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p;return(n<=1?1:n<=2?2:n<=5?5:10)*p}
+  function renderChart(){
+    var y=$("fYear").value,I=Array(12).fill(0),G=Array(12).fill(0);
+    state.ingresos.forEach(function(r){if((r.fecha||"").slice(0,4)===y)I[parseInt(r.fecha.slice(5,7),10)-1]+=nz(r.base)});
+    state.gastos.forEach(function(r){if((r.fecha||"").slice(0,4)===y)G[parseInt(r.fecha.slice(5,7),10)-1]+=nz(r.base)});
+    var mx=niceMax(Math.max.apply(null,I.concat(G)));
+    var W=640,H=240,L=54,R=8,T=10,B=26,pw=W-L-R,ph=H-T-B,s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Ingresos y gastos mensuales">';
+    for(var t=0;t<=4;t++){
+      var v=mx*t/4,yy=T+ph-ph*t/4;
+      s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--line)" stroke-width="1"/>';
+      s+='<text x="'+(L-6)+'" y="'+(yy+4)+'" text-anchor="end">'+(v>=1000?(v/1000).toLocaleString("es-ES")+" k":v)+'</text>';
+    }
+    var gw=pw/12,bw=Math.min(16,gw/2-3);
+    for(var i=0;i<12;i++){
+      var cx=L+gw*i+gw/2,hi=I[i]/mx*ph,hg=G[i]/mx*ph;
+      s+='<rect x="'+(cx-bw-1)+'" y="'+(T+ph-hi)+'" width="'+bw+'" height="'+hi+'" rx="2" fill="var(--in)"><title>'+MONTHS[i]+' ingresos: '+eur.format(I[i])+'</title></rect>';
+      s+='<rect x="'+(cx+1)+'" y="'+(T+ph-hg)+'" width="'+bw+'" height="'+hg+'" rx="2" fill="var(--out)"><title>'+MONTHS[i]+' gastos: '+eur.format(G[i])+'</title></rect>';
+      s+='<text x="'+cx+'" y="'+(H-8)+'" text-anchor="middle">'+MONTHS[i]+'</text>';
+    }
+    $("chart").innerHTML=s+'</svg>';
+  }
+  function renderTable(){
+    var isIn=state.list==="in",rows=(isIn?state.ingresos:state.gastos).filter(inPeriod);
+    var q=$("q").value.trim().toLowerCase();
+    if(q)rows=rows.filter(function(r){return[r.num,r.fabricante,r.empresa,r.categoria].join(" ").toLowerCase().indexOf(q)>=0});
+    rows.sort(function(a,b){return(b.fecha||"").localeCompare(a.fecha||"")});
+    var head='<thead><tr><th>Nº factura</th><th>Fecha</th><th>'+(isIn?'Fabricante':'Empresa')+'</th>'+(isIn?'':'<th>Categoría</th>')+'<th class="num">Base</th><th class="num">IVA</th><th class="num">Total</th><th></th></tr></thead>';
+    if(!rows.length){
+      $("tbl").innerHTML=head+'<tbody><tr><td colspan="8" class="empty">'+(isIn?'No hay ingresos':'No hay gastos')+' en este periodo. Añade el primero con el formulario.</td></tr></tbody>';return;
+    }
+    var tot=0;
+    var body=rows.map(function(r){
+      var t=nz(r.base)+nz(r.iva);tot+=t;
+      var conf=state.confirmId===r.id;
+      return '<tr><td>'+esc(r.num)+'</td><td>'+fdate(r.fecha)+'</td><td>'+esc(isIn?r.fabricante:r.empresa)+'</td>'+
+        (isIn?'':'<td><span class="pill">'+esc(r.categoria)+'</span></td>')+
+        '<td class="num">'+eur.format(nz(r.base))+'</td><td class="num">'+eur.format(nz(r.iva))+'</td><td class="num">'+eur.format(t)+'</td>'+
+        '<td class="acts"><button class="btn ghost small" data-act="edit" data-id="'+esc(r.id)+'">Editar</button> '+
+        '<button class="btn small danger" data-act="del" data-id="'+esc(r.id)+'">'+(conf?'¿Borrar?':'Borrar')+'</button></td></tr>';
+    }).join("");
+    $("tbl").innerHTML=head+'<tbody>'+body+'</tbody><tfoot><tr><td colspan="'+(isIn?3:4)+'"><strong>Total</strong></td><td class="num"><strong>'+eur.format(sum(rows,"base"))+'</strong></td><td class="num"><strong>'+eur.format(sum(rows,"iva"))+'</strong></td><td class="num"><strong>'+eur.format(tot)+'</strong></td><td></td></tr></tfoot>';
+  }
+
+  /* ---------- formulario ---------- */
+  function setKind(k){
+    state.kind=k;
+    $("tabIn").setAttribute("aria-pressed",k==="in");$("tabOut").setAttribute("aria-pressed",k==="out");
+    $("whoText").textContent=k==="in"?"Fabricante":"Empresa remitente";
+    $("lblCat").hidden=k==="in";
+    $("btnSave").textContent=(state.editId?"Actualizar ":"Guardar ")+(k==="in"?"ingreso":"gasto");
+    var names={};(k==="in"?state.ingresos:state.gastos).forEach(function(r){var n=k==="in"?r.fabricante:r.empresa;if(n)names[n]=1});
+    $("whoList").innerHTML=Object.keys(names).sort().map(function(n){return'<option value="'+esc(n)+'">'}).join("");
+  }
+  function resetForm(){
+    state.editId=null;$("form").reset();$("fIva").value="0";$("fDate").value=new Date().toISOString().slice(0,10);
+    $("btnCancel").hidden=true;setKind(state.kind);
+  }
+  function msg(t,err){var m=$("msg");m.textContent=t;m.className="msg"+(err?" err":"")}
+  $("fCat").innerHTML=CATS.map(function(c){return"<option>"+c+"</option>"}).join("");
+  $("tabIn").onclick=function(){if(!state.editId){setKind("in")}};
+  $("tabOut").onclick=function(){if(!state.editId){setKind("out")}};
+  $("btnCancel").onclick=function(){resetForm();msg("")};
+  $("form").addEventListener("submit",function(e){
+    e.preventDefault();
+    var k=state.kind,rec={num:$("fNum").value.trim(),fecha:$("fDate").value,base:nz($("fBase").value),iva:nz($("fIva").value)};
+    if(k==="in")rec.fabricante=$("fWho").value.trim();else{rec.empresa=$("fWho").value.trim();rec.categoria=$("fCat").value}
+    var dup=(k==="in"?state.ingresos:state.gastos).some(function(r){return r.num===rec.num&&r.id!==state.editId&&(k==="in"?r.fabricante===rec.fabricante:r.empresa===rec.empresa)});
+    if(dup){msg("Ya existe una factura con ese número para esa empresa.",true);return}
+    var wasEdit=!!state.editId;
+    save(k,rec,state.editId).then(function(){
+      state.list=k;syncList();
+      $("fYear").value=rec.fecha.slice(0,4);
+      resetForm();msg(wasEdit?"Factura actualizada.":"Factura guardada.");render();
+    }).catch(function(err){msg("No se pudo guardar: "+((err&&err.message)||"error"),true)});
+  });
+
+  /* ---------- listado ---------- */
+  function syncList(){$("lstIn").setAttribute("aria-pressed",state.list==="in");$("lstOut").setAttribute("aria-pressed",state.list==="out")}
+  $("lstIn").onclick=function(){state.list="in";state.confirmId=null;syncList();renderTable()};
+  $("lstOut").onclick=function(){state.list="out";state.confirmId=null;syncList();renderTable()};
+  $("q").oninput=renderTable;
+  $("fYear").onchange=render;$("fPeriod").onchange=render;
+  $("tbl").addEventListener("click",function(e){
+    var b=e.target.closest("button[data-act]");if(!b)return;
+    var id=b.dataset.id,k=state.list,rows=k==="in"?state.ingresos:state.gastos;
+    var r=rows.filter(function(x){return x.id===id})[0];if(!r)return;
+    if(b.dataset.act==="edit"){
+      state.editId=null;state.kind=k;setKind(k);state.editId=id;
+      $("fNum").value=r.num||"";$("fDate").value=r.fecha||"";$("fWho").value=(k==="in"?r.fabricante:r.empresa)||"";
+      if(k==="out")$("fCat").value=r.categoria||"Otros";
+      $("fBase").value=r.base;$("fIva").value=r.iva;
+      $("btnCancel").hidden=false;setKind(k);msg("Editando factura "+r.num+".");
+      $("fNum").focus();
+    }else if(state.confirmId===id){
+      state.confirmId=null;remove(k,id).catch(function(){});
+    }else{state.confirmId=id;renderTable()}
+  });
+
+  /* ---------- CSV ---------- */
+  $("btnCsv").onclick=function(){
+    var isIn=state.list==="in",rows=(isIn?state.ingresos:state.gastos).filter(inPeriod);
+    var cols=isIn?["num","fecha","fabricante","base","iva"]:["num","fecha","empresa","categoria","base","iva"];
+    var csv=[cols.join(";")].concat(rows.map(function(r){return cols.map(function(c){var v=r[c]==null?"":String(r[c]);if(c==="base"||c==="iva")v=v.replace(".",",");return'"'+v.replace(/"/g,'""')+'"'}).join(";")})).join("\n");
+    var name=(isIn?"ingresos":"gastos")+"-"+$("fYear").value+".csv";
+    claude.use("downloads").then(function(d){
+      if(!d){msg("La descarga no está disponible en esta vista.",true);return}
+      return d.save({filename:name,data:"﻿"+csv}).then(function(){msg("CSV guardado.")});
+    }).catch(function(){msg("No se guardó el archivo.",true)});
+  };
+
+  /* ---------- arranque ---------- */
+  $("fPeriod").value="all";resetForm();render();
+  (window.claude&&claude.use?claude.use("db"):Promise.resolve(null)).then(function(d){
+    if(!d){lsLoad();render();return}
+    db=d;
+    ["ingresos","gastos"].forEach(function(name){
+      db.collection(name).onSnapshot(function(snap){state[name]=toRows(snap);render();setKind(state.kind)},function(){});
+    });
+  }).catch(function(){lsLoad();render()});
+  lsLoad();render();
+})();
+</script>
