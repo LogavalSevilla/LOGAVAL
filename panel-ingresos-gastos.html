@@ -80,6 +80,10 @@ td.acts{text-align:right;white-space:nowrap}
 .tabs2 button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:99px;padding:5px 14px;cursor:pointer;font-weight:600}
 .tabs2 button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .note{color:var(--muted);font-size:12px}
+.bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--soft);border-radius:8px;padding:8px 12px;margin-bottom:10px}
+.bulk span{flex:1;min-width:140px;font-weight:600}
+td.c1,th.c1{width:30px;padding-right:0}
+tr.sel td{background:var(--soft)}
 .imp{border-top:1px solid var(--line);margin-top:16px;padding-top:14px;display:flex;flex-direction:column;gap:8px}
 .drop{border:1.5px dashed var(--line);border-radius:8px;padding:14px;text-align:center;color:var(--muted);cursor:pointer;font-size:13px}
 .drop.over,.drop:hover{border-color:var(--accent);color:var(--fg)}
@@ -190,6 +194,7 @@ td.acts{text-align:right;white-space:nowrap}
         <button class="btn ghost small" id="btnCsv" type="button">Descargar CSV</button>
       </div>
     </div>
+    <div class="bulk" id="bulk" hidden></div>
     <div class="tablewrap"><table id="tbl"></table></div>
     <p class="note" id="storeNote"></p>
   </section>
@@ -199,7 +204,7 @@ td.acts{text-align:right;white-space:nowrap}
 (function(){
   var CATS=["Informática","Coche","Mensajería","Mercadería","Telefonía","Amazon","Viajes","Gestoría","Ferias y eventos","Seguros","Comisiones bancarias","Otros"];
   var MONTHS=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-  var state={ingresos:[],gastos:[],kind:"in",list:"in",editId:null,confirmId:null};
+  var state={ingresos:[],gastos:[],kind:"in",list:"in",editId:null,confirmId:null,sel:{},bulkConfirm:false};
   var db=null, LS="logaval-panel-v1";
 
   var $=function(id){return document.getElementById(id)};
@@ -303,21 +308,36 @@ td.acts{text-align:right;white-space:nowrap}
     var q=$("q").value.trim().toLowerCase();
     if(q)rows=rows.filter(function(r){return[r.num,r.fabricante,r.empresa,r.categoria].join(" ").toLowerCase().indexOf(q)>=0});
     rows.sort(function(a,b){return(b.fecha||"").localeCompare(a.fecha||"")});
-    var head='<thead><tr><th>Nº factura</th><th>Fecha</th><th>'+(isIn?'Fabricante':'Empresa')+'</th>'+(isIn?'':'<th>Categoría</th>')+'<th class="num">Base</th><th class="num">IVA</th><th class="num">Total</th><th></th></tr></thead>';
+    var head='<thead><tr><th class="c1"><input type="checkbox" id="selAll" aria-label="Seleccionar todas"></th><th>Nº factura</th><th>Fecha</th><th>'+(isIn?'Fabricante':'Empresa')+'</th>'+(isIn?'':'<th>Categoría</th>')+'<th class="num">Base</th><th class="num">IVA</th><th class="num">Total</th><th></th></tr></thead>';
     if(!rows.length){
-      $("tbl").innerHTML=head+'<tbody><tr><td colspan="8" class="empty">'+(isIn?'No hay ingresos':'No hay gastos')+' en este periodo. Añade el primero con el formulario.</td></tr></tbody>';return;
+      $("tbl").innerHTML=head+'<tbody><tr><td colspan="9" class="empty">'+(isIn?'No hay ingresos':'No hay gastos')+' en este periodo. Añade el primero con el formulario.</td></tr></tbody>';afterTable([]);return;
     }
     var tot=0;
     var body=rows.map(function(r){
       var t=nz(r.base)+nz(r.iva);tot+=t;
       var conf=state.confirmId===r.id;
-      return '<tr><td>'+esc(r.num)+'</td><td>'+fdate(r.fecha)+'</td><td>'+esc(isIn?r.fabricante:r.empresa)+'</td>'+
+      return '<tr class="'+(state.sel[r.id]?'sel':'')+'"><td class="c1"><input type="checkbox" data-act="pick" data-id="'+esc(r.id)+'"'+(state.sel[r.id]?' checked':'')+' aria-label="Seleccionar factura '+esc(r.num)+'"></td><td>'+esc(r.num)+'</td><td>'+fdate(r.fecha)+'</td><td>'+esc(isIn?r.fabricante:r.empresa)+'</td>'+
         (isIn?'':'<td><span class="pill">'+esc(r.categoria)+'</span></td>')+
         '<td class="num">'+eur.format(nz(r.base))+'</td><td class="num">'+eur.format(nz(r.iva))+'</td><td class="num">'+eur.format(t)+'</td>'+
         '<td class="acts"><button class="btn ghost small" data-act="edit" data-id="'+esc(r.id)+'">Editar</button> '+
         '<button class="btn small danger" data-act="del" data-id="'+esc(r.id)+'">'+(conf?'¿Borrar?':'Borrar')+'</button></td></tr>';
     }).join("");
-    $("tbl").innerHTML=head+'<tbody>'+body+'</tbody><tfoot><tr><td colspan="'+(isIn?3:4)+'"><strong>Total</strong></td><td class="num"><strong>'+eur.format(sum(rows,"base"))+'</strong></td><td class="num"><strong>'+eur.format(sum(rows,"iva"))+'</strong></td><td class="num"><strong>'+eur.format(tot)+'</strong></td><td></td></tr></tfoot>';
+    $("tbl").innerHTML=head+'<tbody>'+body+'</tbody><tfoot><tr><td colspan="'+(isIn?4:5)+'"><strong>Total</strong></td><td class="num"><strong>'+eur.format(sum(rows,"base"))+'</strong></td><td class="num"><strong>'+eur.format(sum(rows,"iva"))+'</strong></td><td class="num"><strong>'+eur.format(tot)+'</strong></td><td></td></tr></tfoot>';
+    afterTable(rows);
+  }
+  function visibleRows(){
+    var isIn=state.list==="in",rows=(isIn?state.ingresos:state.gastos).filter(inPeriod),q=$("q").value.trim().toLowerCase();
+    if(q)rows=rows.filter(function(r){return[r.num,r.fabricante,r.empresa,r.categoria].join(" ").toLowerCase().indexOf(q)>=0});
+    return rows;
+  }
+  function selIds(){var v={};visibleRows().forEach(function(r){v[r.id]=1});return Object.keys(state.sel).filter(function(id){return state.sel[id]&&v[id]})}
+  function afterTable(rows){
+    var n=selIds().length,b=$("bulk"),all=$("selAll");
+    if(all){all.checked=rows.length>0&&n===rows.length;all.indeterminate=n>0&&n<rows.length}
+    b.hidden=n===0;if(!n){state.bulkConfirm=false;return}
+    b.innerHTML='<span>'+n+' seleccionada'+(n>1?'s':'')+'</span>'+
+      (state.bulkConfirm?'<button class="btn danger" data-bulk="go" type="button">Sí, eliminar '+n+'</button><button class="btn ghost" data-bulk="no" type="button">No</button>'
+        :'<button class="btn danger" data-bulk="ask" type="button">Eliminar seleccionadas</button><button class="btn ghost" data-bulk="clear" type="button">Quitar selección</button>');
   }
 
   /* ---------- formulario ---------- */
@@ -355,10 +375,28 @@ td.acts{text-align:right;white-space:nowrap}
 
   /* ---------- listado ---------- */
   function syncList(){$("lstIn").setAttribute("aria-pressed",state.list==="in");$("lstOut").setAttribute("aria-pressed",state.list==="out")}
-  $("lstIn").onclick=function(){state.list="in";state.confirmId=null;syncList();renderTable()};
-  $("lstOut").onclick=function(){state.list="out";state.confirmId=null;syncList();renderTable()};
+  $("lstIn").onclick=function(){state.list="in";state.confirmId=null;state.sel={};state.bulkConfirm=false;syncList();renderTable()};
+  $("lstOut").onclick=function(){state.list="out";state.confirmId=null;state.sel={};state.bulkConfirm=false;syncList();renderTable()};
   $("q").oninput=renderTable;
   $("fYear").onchange=render;$("fPeriod").onchange=render;
+  $("tbl").addEventListener("change",function(e){
+    var el=e.target;
+    if(el.id==="selAll"){visibleRows().forEach(function(r){state.sel[r.id]=el.checked});state.bulkConfirm=false;renderTable();return}
+    if(el.dataset.act==="pick"){state.sel[el.dataset.id]=el.checked;state.bulkConfirm=false;renderTable()}
+  });
+  $("bulk").addEventListener("click",function(e){
+    var b=e.target.closest("button[data-bulk]");if(!b)return;
+    var a=b.dataset.bulk,k=state.list;
+    if(a==="ask"){state.bulkConfirm=true;renderTable()}
+    else if(a==="no"){state.bulkConfirm=false;renderTable()}
+    else if(a==="clear"){state.sel={};state.bulkConfirm=false;renderTable()}
+    else if(a==="go"){
+      var ids=selIds(),n=0;state.bulkConfirm=false;b.disabled=true;
+      ids.reduce(function(ch,id){return ch.then(function(){return remove(k,id).then(function(){n++;delete state.sel[id]})})},Promise.resolve())
+        .then(function(){msg(n+" factura"+(n>1?"s eliminadas.":" eliminada."));render()})
+        .catch(function(){msg("Se eliminaron "+n+" y falló alguna. Revisa el listado.",true);render()});
+    }
+  });
   $("tbl").addEventListener("click",function(e){
     var b=e.target.closest("button[data-act]");if(!b)return;
     var id=b.dataset.id,k=state.list,rows=k==="in"?state.ingresos:state.gastos;
@@ -371,7 +409,7 @@ td.acts{text-align:right;white-space:nowrap}
       $("btnCancel").hidden=false;setKind(k);msg("Editando factura "+r.num+".");
       $("fNum").focus();
     }else if(state.confirmId===id){
-      state.confirmId=null;remove(k,id).catch(function(){});
+      state.confirmId=null;delete state.sel[id];remove(k,id).then(function(){msg('Factura eliminada.')}).catch(function(){msg('No se pudo eliminar.',true)});
     }else{state.confirmId=id;renderTable()}
   });
 
