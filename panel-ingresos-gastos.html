@@ -80,9 +80,19 @@ td.acts{text-align:right;white-space:nowrap}
 .tabs2 button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:99px;padding:5px 14px;cursor:pointer;font-weight:600}
 .tabs2 button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .note{color:var(--muted);font-size:12px}
+.imp{border-top:1px solid var(--line);margin-top:16px;padding-top:14px;display:flex;flex-direction:column;gap:8px}
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:14px;text-align:center;color:var(--muted);cursor:pointer;font-size:13px}
+.drop.over,.drop:hover{border-color:var(--accent);color:var(--fg)}
+.drop input{display:none}
+#review table{min-width:900px}
+#review td input,#review td select{padding:5px 6px;font-size:13px}
+#review td.c1{width:28px}
+.dupe{color:var(--bad);font-size:11px}
+.spin{color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.bar .t b{transition:width .3s}}
 </style>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <div class="wrap">
   <header>
     <div>
@@ -147,8 +157,27 @@ td.acts{text-align:right;white-space:nowrap}
           <button class="btn ghost" id="btnCancel" type="button" hidden>Cancelar</button>
         </div>
       </form>
+      <div class="imp">
+        <h2>Importar desde archivo</h2>
+        <label class="drop" id="drop" for="fileIn">Arrastra aquí facturas en <b>PDF</b> o <b>Markdown (.md)</b>, o pulsa para elegirlas
+          <input id="fileIn" type="file" accept=".pdf,.md,.markdown,.txt,application/pdf,text/markdown" multiple>
+        </label>
+        <div class="msg" id="impMsg" role="status"></div>
+      </div>
     </aside>
   </div>
+
+  <section class="panel" id="review" hidden>
+    <div class="panel-h">
+      <h2>Revisa los datos leídos antes de insertarlos</h2>
+      <div class="tools">
+        <button class="btn" id="btnImport" type="button">Insertar seleccionadas</button>
+        <button class="btn ghost" id="btnDiscard" type="button">Descartar</button>
+      </div>
+    </div>
+    <p class="note">Corrige lo que haga falta. Las filas marcadas como duplicadas vienen sin seleccionar.</p>
+    <div class="tablewrap"><table id="revTbl"></table></div>
+  </section>
 
   <section class="panel">
     <div class="panel-h">
@@ -357,6 +386,140 @@ td.acts{text-align:right;white-space:nowrap}
       return d.save({filename:name,data:"﻿"+csv}).then(function(){msg("CSV guardado.")});
     }).catch(function(){msg("No se guardó el archivo.",true)});
   };
+
+  /* ---------- importar desde archivos ---------- */
+  var pending=[];
+  function norm(t){return String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim()}
+  function pNum(v){
+    var t=String(v==null?"":v).replace(/[^\d,.\-]/g,"");
+    if(!t)return 0;
+    if(t.indexOf(",")>=0)t=t.replace(/\./g,"").replace(",",".");
+    else if((t.match(/\./g)||[]).length>1)t=t.replace(/\./g,"");
+    return nz(t);
+  }
+  function pDate(v){
+    var t=String(v||"").trim(),m;
+    if((m=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)))return m[1]+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[3]).slice(-2);
+    if((m=t.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/))){var y=m[3].length===2?"20"+m[3]:m[3];return y+"-"+("0"+m[2]).slice(-2)+"-"+("0"+m[1]).slice(-2)}
+    return"";
+  }
+  function mapCat(c){var n=norm(c);for(var i=0;i<CATS.length;i++){if(norm(CATS[i])===n)return CATS[i]}return"Otros"}
+  function parseMdTable(text){
+    var lines=text.split(/\r?\n/).filter(function(l){return l.indexOf("|")>=0}),out=[];
+    if(lines.length<3)return out;
+    function cells(l){return l.trim().replace(/^\||\|$/g,"").split("|").map(function(c){return c.trim()})}
+    var head=cells(lines[0]).map(norm),idx={};
+    head.forEach(function(h,i){
+      if(/^(n|no|num|numero|n°|nº)?\.?\s*(de )?factura|^num|^n[ºo°]/.test(h)&&idx.num==null)idx.num=i;
+      else if(/fecha/.test(h))idx.fecha=i;
+      else if(/fabricante|cliente|empresa|proveedor|remitente/.test(h))idx.who=i;
+      else if(/categoria/.test(h))idx.cat=i;
+      else if(/iva|impuesto/.test(h))idx.iva=i;
+      else if(/importe|base|total/.test(h)&&idx.base==null)idx.base=i;
+      else if(/tipo/.test(h))idx.tipo=i;
+    });
+    if(idx.num==null||idx.fecha==null||idx.base==null)return out;
+    lines.slice(1).forEach(function(l){
+      var c=cells(l);if(/^[\s:\-|]+$/.test(l))return;
+      var tipo=idx.tipo!=null?norm(c[idx.tipo]):"";
+      out.push({tipo:/gasto|compra|recibida/.test(tipo)?"out":/ingreso|venta|emitida/.test(tipo)?"in":state.kind,
+        num:c[idx.num]||"",fecha:pDate(c[idx.fecha]),who:idx.who!=null?c[idx.who]:"",
+        categoria:idx.cat!=null?mapCat(c[idx.cat]):"Otros",base:pNum(c[idx.base]),iva:idx.iva!=null?pNum(c[idx.iva]):0});
+    });
+    return out;
+  }
+  function readPdf(file){
+    if(!window.pdfjsLib)return Promise.reject(new Error("No se pudo cargar el lector de PDF."));
+    pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    return file.arrayBuffer().then(function(buf){return pdfjsLib.getDocument({data:buf}).promise}).then(function(pdf){
+      var jobs=[];for(var i=1;i<=pdf.numPages;i++)jobs.push(pdf.getPage(i).then(function(pg){return pg.getTextContent()}).then(function(tc){
+        return tc.items.map(function(it){return it.str+(it.hasEOL?"\n":" ")}).join("")}));
+      return Promise.all(jobs).then(function(t){return t.join("\n\n")});
+    });
+  }
+  function aiExtract(text,fname){
+    return claude.use("sample").then(function(sample){
+      if(!sample)throw new Error("La lectura automática con IA no está disponible en esta vista.");
+      var prompt="Extrae las facturas del siguiente documento ("+fname+"). Contexto: LOGAVAL EXPORT TRADING, SLU es una agencia comercial de cerámica. Sus INGRESOS son facturas que Logaval emite a fabricantes (normalmente comisiones). Sus GASTOS son facturas que recibe de otras empresas.\n"+
+        "Devuelve SOLO un array JSON (sin texto adicional). Cada elemento: {\"tipo\":\"ingreso\"|\"gasto\",\"num\":\"número de factura\",\"fecha\":\"YYYY-MM-DD\",\"empresa\":\"si es ingreso, el fabricante cliente; si es gasto, la empresa que emite la factura\",\"categoria\":\"solo gastos, una de: "+CATS.join(", ")+"\",\"base\":número base imponible en euros sin IVA,\"iva\":número importe del IVA en euros}.\n"+
+        "Usa punto decimal. Si algún dato no aparece, deja cadena vacía o 0. No inventes datos.\n\nDOCUMENTO:\n"+text.slice(0,30000);
+      return sample.json(prompt,{cache:false,modelTier:"quick"});
+    }).then(function(arr){
+      if(!Array.isArray(arr))arr=arr&&Array.isArray(arr.facturas)?arr.facturas:[];
+      return arr.map(function(r){return{tipo:norm(r.tipo)==="gasto"?"out":"in",num:String(r.num||""),fecha:pDate(r.fecha),who:String(r.empresa||r.fabricante||""),
+        categoria:mapCat(r.categoria),base:nz(r.base),iva:nz(r.iva)}});
+    });
+  }
+  function isDupe(r){
+    return(r.tipo==="in"?state.ingresos:state.gastos).some(function(x){return x.num===r.num&&(r.tipo==="in"?x.fabricante:x.empresa)===r.who})
+      ||pending.some(function(x){return x!==r&&x.tipo===r.tipo&&x.num===r.num&&x.who===r.who&&x.idx<r.idx});
+  }
+  function impMsg(t,err){var m=$("impMsg");m.textContent=t;m.className="msg"+(err?" err":"")}
+  function handleFiles(files){
+    files=Array.prototype.slice.call(files);if(!files.length)return;
+    var added=0,errs=[];
+    impMsg("Leyendo "+files.length+" archivo(s)…");
+    files.reduce(function(chain,f){
+      return chain.then(function(){
+        var isPdf=/\.pdf$/i.test(f.name)||f.type==="application/pdf";
+        return(isPdf?readPdf(f):f.text()).then(function(text){
+          if(!text||text.replace(/\s/g,"").length<20)throw new Error("no tiene texto legible (¿PDF escaneado?)");
+          var rows=isPdf?[]:parseMdTable(text);
+          return rows.length?rows:aiExtract(text,f.name);
+        }).then(function(rows){
+          if(!rows.length)throw new Error("no se encontraron facturas");
+          rows.forEach(function(r){r.file=f.name;r.idx=pending.length;r.sel=true;pending.push(r);added++});
+        }).catch(function(e){errs.push(f.name+": "+((e&&e.message)||"error"))});
+      });
+    },Promise.resolve()).then(function(){
+      pending.forEach(function(r){r.dupe=isDupe(r);if(r.dupe&&!r.touched)r.sel=false});
+      impMsg(added?added+" factura(s) leída(s). Revísalas abajo.":"",false);
+      if(errs.length)impMsg((added?added+" leída(s). ":"")+"Problemas: "+errs.join(" · "),true);
+      renderReview();
+      if(added)$("review").scrollIntoView({behavior:"smooth",block:"start"});
+    });
+  }
+  function renderReview(){
+    $("review").hidden=!pending.length;
+    if(!pending.length)return;
+    var head='<thead><tr><th></th><th>Tipo</th><th>Nº factura</th><th>Fecha</th><th>Empresa</th><th>Categoría</th><th class="num">Base</th><th class="num">IVA</th><th>Archivo</th></tr></thead>';
+    $("revTbl").innerHTML=head+'<tbody>'+pending.map(function(r,i){
+      return'<tr data-i="'+i+'"><td class="c1"><input type="checkbox" data-f="sel"'+(r.sel?' checked':'')+' aria-label="Insertar"></td>'+
+        '<td><select data-f="tipo"><option value="in"'+(r.tipo==="in"?' selected':'')+'>Ingreso</option><option value="out"'+(r.tipo==="out"?' selected':'')+'>Gasto</option></select></td>'+
+        '<td><input data-f="num" value="'+esc(r.num)+'"></td><td><input data-f="fecha" type="date" value="'+esc(r.fecha)+'"></td>'+
+        '<td><input data-f="who" value="'+esc(r.who)+'"></td>'+
+        '<td><select data-f="categoria"'+(r.tipo==="in"?' disabled':'')+'>'+CATS.map(function(c){return'<option'+(c===r.categoria?' selected':'')+'>'+c+'</option>'}).join("")+'</select></td>'+
+        '<td><input data-f="base" type="number" step="0.01" value="'+r.base+'"></td><td><input data-f="iva" type="number" step="0.01" value="'+r.iva+'"></td>'+
+        '<td class="note">'+esc(r.file)+(r.dupe?'<div class="dupe">Posible duplicado</div>':'')+'</td></tr>';
+    }).join("")+'</tbody>';
+  }
+  $("revTbl").addEventListener("change",function(e){
+    var el=e.target,tr=el.closest("tr"),f=el.dataset.f;if(!tr||!f)return;
+    var r=pending[+tr.dataset.i];
+    if(f==="sel"){r.sel=el.checked;r.touched=true;return}
+    r[f]=(f==="base"||f==="iva")?nz(el.value):el.value;
+    if(f==="tipo"||f==="num"||f==="who"){pending.forEach(function(x){x.dupe=isDupe(x)});renderReview()}
+  });
+  $("btnDiscard").onclick=function(){pending=[];renderReview();impMsg("")};
+  $("btnImport").onclick=function(){
+    var rows=pending.filter(function(r){return r.sel});
+    var bad=rows.filter(function(r){return!r.num||!r.fecha||!r.who});
+    if(!rows.length){impMsg("No hay filas seleccionadas.",true);return}
+    if(bad.length){impMsg("Faltan nº, fecha o empresa en "+bad.length+" fila(s). Complétalas o desmárcalas.",true);return}
+    $("btnImport").disabled=true;var n=0;
+    rows.reduce(function(ch,r){return ch.then(function(){
+      var rec={num:r.num.trim(),fecha:r.fecha,base:r.base,iva:r.iva};
+      if(r.tipo==="in")rec.fabricante=r.who.trim();else{rec.empresa=r.who.trim();rec.categoria=r.categoria}
+      return save(r.tipo,rec).then(function(){n++});
+    })},Promise.resolve()).then(function(){
+      pending=pending.filter(function(r){return!r.sel});renderReview();render();impMsg(n+" factura(s) insertada(s).");
+    }).catch(function(e){impMsg("Se insertaron "+n+" y falló una: "+((e&&e.message)||"error"),true)})
+      .then(function(){$("btnImport").disabled=false});
+  };
+  $("fileIn").onchange=function(e){handleFiles(e.target.files);e.target.value=""};
+  ["dragenter","dragover"].forEach(function(ev){$("drop").addEventListener(ev,function(e){e.preventDefault();$("drop").classList.add("over")})});
+  ["dragleave","drop"].forEach(function(ev){$("drop").addEventListener(ev,function(e){e.preventDefault();$("drop").classList.remove("over")})});
+  $("drop").addEventListener("drop",function(e){if(e.dataTransfer)handleFiles(e.dataTransfer.files)});
 
   /* ---------- arranque ---------- */
   $("fPeriod").value="all";resetForm();render();
