@@ -5,16 +5,16 @@
 /* Layout: cabecera + 4 indicadores, gráficos a la izquierda, formulario fijo a la derecha, tablas debajo */
 :root{
   --bg:#eef2f2; --surface:#ffffff; --fg:#10201f; --muted:#5b6f6d; --line:#d5dfde;
-  --accent:#0e6b66; --accent-fg:#ffffff; --in:#0e7f78; --out:#c27a12; --bad:#b3372c; --soft:#e2ecea;
+  --accent:#0e6b66; --accent-fg:#ffffff; --in:#0e7f78; --in2:#2f5fa8; --out:#c27a12; --bad:#b3372c; --soft:#e2ecea;
   --display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
   --body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0c1717; --surface:#142423; --fg:#e4efed; --muted:#8fa7a4; --line:#264240;
-  --accent:#3cb8af; --accent-fg:#06201e; --in:#3cb8af; --out:#e5a23d; --bad:#ef7a6e; --soft:#1b3231; color-scheme:dark}}
+  --accent:#3cb8af; --accent-fg:#06201e; --in:#3cb8af; --in2:#7ea6e8; --out:#e5a23d; --bad:#ef7a6e; --soft:#1b3231; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0c1717; --surface:#142423; --fg:#e4efed; --muted:#8fa7a4; --line:#264240;
-  --accent:#3cb8af; --accent-fg:#06201e; --in:#3cb8af; --out:#e5a23d; --bad:#ef7a6e; --soft:#1b3231; color-scheme:dark}
+  --accent:#3cb8af; --accent-fg:#06201e; --in:#3cb8af; --in2:#7ea6e8; --out:#e5a23d; --bad:#ef7a6e; --soft:#1b3231; color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:20px 40px}
 *{box-sizing:border-box}
 .wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
@@ -126,7 +126,7 @@ tr.sel td{background:var(--soft)}
       <section class="panel">
         <div class="panel-h">
           <h2>Ingresos y gastos por mes (base sin IVA)</h2>
-          <div class="legend"><span><i style="background:var(--in)"></i>Ingresos</span><span><i style="background:var(--out)"></i>Gastos</span></div>
+          <div class="legend"><span><i style="background:var(--in)"></i>Comisiones</span><span><i style="background:var(--in2)"></i>Venta de material</span><span id="legO" hidden><i style="background:var(--muted)"></i>Sin clasificar</span><span><i style="background:var(--out)"></i>Gastos</span></div>
         </div>
         <div id="chart"></div>
       </section>
@@ -146,6 +146,7 @@ tr.sel td{background:var(--soft)}
           <label>Nº factura<input id="fNum" required></label>
           <label>Fecha factura<input id="fDate" type="date" required></label>
         </div>
+        <div class="note" id="numHint"></div>
         <label id="lblWho"><span id="whoText">Fabricante</span><input id="fWho" list="whoList" required></label>
         <datalist id="whoList"></datalist>
         <label id="lblCat" hidden>Categoría
@@ -194,6 +195,7 @@ tr.sel td{background:var(--soft)}
         <button class="btn ghost small" id="btnCsv" type="button">Descargar CSV</button>
       </div>
     </div>
+    <div class="tabs2" id="subTabs" hidden style="margin-bottom:10px;flex-wrap:wrap"></div>
     <div class="bulk" id="bulk" hidden></div>
     <div class="tablewrap"><table id="tbl"></table></div>
     <p class="note" id="storeNote"></p>
@@ -204,7 +206,7 @@ tr.sel td{background:var(--soft)}
 (function(){
   var CATS=["Informática","Coche","Mensajería","Mercadería","Telefonía","Amazon","Viajes","Gestoría","Ferias y eventos","Seguros","Comisiones bancarias","Otros"];
   var MONTHS=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-  var state={ingresos:[],gastos:[],kind:"in",list:"in",editId:null,confirmId:null,sel:{},bulkConfirm:false};
+  var state={ingresos:[],gastos:[],kind:"in",list:"in",editId:null,confirmId:null,sel:{},bulkConfirm:false,sub:"all"};
   var db=null, LS="logaval-panel-v1";
 
   var $=function(id){return document.getElementById(id)};
@@ -212,6 +214,8 @@ tr.sel td{background:var(--soft)}
   var eur0=new Intl.NumberFormat("es-ES",{style:"currency",currency:"EUR",maximumFractionDigits:0});
   function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
   function fdate(s){var p=(s||"").split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:s}
+  function subOf(num){var c=String(num||"").trim().charAt(0).toUpperCase();return c==="C"||c==="E"?c:"?"}
+  function subLabel(num){var c=subOf(num);return c==="C"?"Comisiones":c==="E"?"Venta de material":"Sin clasificar"}
   function nz(v){v=parseFloat(v);return isFinite(v)?v:0}
 
   /* ---------- almacenamiento ---------- */
@@ -252,6 +256,7 @@ tr.sel td{background:var(--soft)}
     var ys=Object.keys(set).sort().reverse();
     $("fYear").innerHTML=ys.map(function(y){return '<option'+(y===cur?' selected':'')+'>'+y+'</option>'}).join("");
   }
+  function sumSub(arr,c){return arr.filter(function(r){return subOf(r.num)===c}).reduce(function(a,r){return a+nz(r.base)},0)}
   function sum(arr,f){return arr.reduce(function(a,r){return a+nz(r[f])},0)}
 
   /* ---------- render ---------- */
@@ -260,7 +265,7 @@ tr.sel td{background:var(--soft)}
     var inc=state.ingresos.filter(inPeriod),exp=state.gastos.filter(inPeriod);
     var bi=sum(inc,"base"),be=sum(exp,"base"),vi=sum(inc,"iva"),ve=sum(exp,"iva"),res=bi-be,ivaNet=vi-ve;
     $("kpis").innerHTML=
-      '<div class="kpi"><div class="l">Ingresos (base)</div><div class="v">'+eur.format(bi)+'</div><div class="n">'+inc.length+' facturas · total con IVA '+eur.format(bi+vi)+'</div></div>'+
+      '<div class="kpi"><div class="l">Ingresos (base)</div><div class="v">'+eur.format(bi)+'</div><div class="n">'+inc.length+' facturas · total con IVA '+eur.format(bi+vi)+'</div><div class="n">Comisiones '+eur0.format(sumSub(inc,"C"))+' · Venta de material '+eur0.format(sumSub(inc,"E"))+'</div></div>'+
       '<div class="kpi"><div class="l">Gastos (base)</div><div class="v">'+eur.format(be)+'</div><div class="n">'+exp.length+' facturas · total con IVA '+eur.format(be+ve)+'</div></div>'+
       '<div class="kpi main"><div class="l">Resultado</div><div class="v">'+eur.format(res)+'</div><div class="n">Ingresos − gastos, sin IVA</div></div>'+
       '<div class="kpi"><div class="l">IVA a ingresar</div><div class="v'+(ivaNet<0?' neg':'')+'">'+eur.format(ivaNet)+'</div><div class="n">Repercutido '+eur.format(vi)+' − soportado '+eur.format(ve)+'</div></div>';
@@ -284,8 +289,9 @@ tr.sel td{background:var(--soft)}
   }
   function niceMax(v){if(v<=0)return 1000;var p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p;return(n<=1?1:n<=2?2:n<=5?5:10)*p}
   function renderChart(){
-    var y=$("fYear").value,I=Array(12).fill(0),G=Array(12).fill(0);
-    state.ingresos.forEach(function(r){if((r.fecha||"").slice(0,4)===y)I[parseInt(r.fecha.slice(5,7),10)-1]+=nz(r.base)});
+    var y=$("fYear").value,IC=Array(12).fill(0),IE=Array(12).fill(0),IO=Array(12).fill(0),G=Array(12).fill(0);
+    state.ingresos.forEach(function(r){if((r.fecha||"").slice(0,4)===y){var k=subOf(r.num),a=k==="C"?IC:k==="E"?IE:IO;a[parseInt(r.fecha.slice(5,7),10)-1]+=nz(r.base)}});
+    var I=IC.map(function(v,i){return v+IE[i]+IO[i]});$("legO").hidden=!IO.some(function(v){return v>0});
     state.gastos.forEach(function(r){if((r.fecha||"").slice(0,4)===y)G[parseInt(r.fecha.slice(5,7),10)-1]+=nz(r.base)});
     var mx=niceMax(Math.max.apply(null,I.concat(G)));
     var W=640,H=240,L=54,R=8,T=10,B=26,pw=W-L-R,ph=H-T-B,s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Ingresos y gastos mensuales">';
@@ -297,18 +303,18 @@ tr.sel td{background:var(--soft)}
     var gw=pw/12,bw=Math.min(16,gw/2-3);
     for(var i=0;i<12;i++){
       var cx=L+gw*i+gw/2,hi=I[i]/mx*ph,hg=G[i]/mx*ph;
-      s+='<rect x="'+(cx-bw-1)+'" y="'+(T+ph-hi)+'" width="'+bw+'" height="'+hi+'" rx="2" fill="var(--in)"><title>'+MONTHS[i]+' ingresos: '+eur.format(I[i])+'</title></rect>';
+      var yb=T+ph,segs=[[IC[i],"var(--in)","Comisiones"],[IE[i],"var(--in2)","Venta de material"],[IO[i],"var(--muted)","Sin clasificar"]];
+      segs.forEach(function(sg){var h=sg[0]/mx*ph;if(h<=0)return;yb-=h;s+='<rect x="'+(cx-bw-1)+'" y="'+yb+'" width="'+bw+'" height="'+h+'" fill="'+sg[1]+'"><title>'+MONTHS[i]+' · '+sg[2]+': '+eur.format(sg[0])+'</title></rect>'});
       s+='<rect x="'+(cx+1)+'" y="'+(T+ph-hg)+'" width="'+bw+'" height="'+hg+'" rx="2" fill="var(--out)"><title>'+MONTHS[i]+' gastos: '+eur.format(G[i])+'</title></rect>';
       s+='<text x="'+cx+'" y="'+(H-8)+'" text-anchor="middle">'+MONTHS[i]+'</text>';
     }
     $("chart").innerHTML=s+'</svg>';
   }
   function renderTable(){
-    var isIn=state.list==="in",rows=(isIn?state.ingresos:state.gastos).filter(inPeriod);
-    var q=$("q").value.trim().toLowerCase();
-    if(q)rows=rows.filter(function(r){return[r.num,r.fabricante,r.empresa,r.categoria].join(" ").toLowerCase().indexOf(q)>=0});
+    var isIn=state.list==="in",rows=visibleRows();
+    renderSubTabs(isIn);
     rows.sort(function(a,b){return(b.fecha||"").localeCompare(a.fecha||"")});
-    var head='<thead><tr><th class="c1"><input type="checkbox" id="selAll" aria-label="Seleccionar todas"></th><th>Nº factura</th><th>Fecha</th><th>'+(isIn?'Fabricante':'Empresa')+'</th>'+(isIn?'':'<th>Categoría</th>')+'<th class="num">Base</th><th class="num">IVA</th><th class="num">Total</th><th></th></tr></thead>';
+    var head='<thead><tr><th class="c1"><input type="checkbox" id="selAll" aria-label="Seleccionar todas"></th><th>Nº factura</th><th>Fecha</th><th>'+(isIn?'Fabricante':'Empresa')+'</th><th>'+(isIn?'Tipo':'Categoría')+'</th>'+'<th class="num">Base</th><th class="num">IVA</th><th class="num">Total</th><th></th></tr></thead>';
     if(!rows.length){
       $("tbl").innerHTML=head+'<tbody><tr><td colspan="9" class="empty">'+(isIn?'No hay ingresos':'No hay gastos')+' en este periodo. Añade el primero con el formulario.</td></tr></tbody>';afterTable([]);return;
     }
@@ -317,17 +323,23 @@ tr.sel td{background:var(--soft)}
       var t=nz(r.base)+nz(r.iva);tot+=t;
       var conf=state.confirmId===r.id;
       return '<tr class="'+(state.sel[r.id]?'sel':'')+'"><td class="c1"><input type="checkbox" data-act="pick" data-id="'+esc(r.id)+'"'+(state.sel[r.id]?' checked':'')+' aria-label="Seleccionar factura '+esc(r.num)+'"></td><td>'+esc(r.num)+'</td><td>'+fdate(r.fecha)+'</td><td>'+esc(isIn?r.fabricante:r.empresa)+'</td>'+
-        (isIn?'':'<td><span class="pill">'+esc(r.categoria)+'</span></td>')+
+        '<td><span class="pill">'+esc(isIn?subLabel(r.num):r.categoria)+'</span></td>'+
         '<td class="num">'+eur.format(nz(r.base))+'</td><td class="num">'+eur.format(nz(r.iva))+'</td><td class="num">'+eur.format(t)+'</td>'+
         '<td class="acts"><button class="btn ghost small" data-act="edit" data-id="'+esc(r.id)+'">Editar</button> '+
         '<button class="btn small danger" data-act="del" data-id="'+esc(r.id)+'">'+(conf?'¿Borrar?':'Borrar')+'</button></td></tr>';
     }).join("");
-    $("tbl").innerHTML=head+'<tbody>'+body+'</tbody><tfoot><tr><td colspan="'+(isIn?4:5)+'"><strong>Total</strong></td><td class="num"><strong>'+eur.format(sum(rows,"base"))+'</strong></td><td class="num"><strong>'+eur.format(sum(rows,"iva"))+'</strong></td><td class="num"><strong>'+eur.format(tot)+'</strong></td><td></td></tr></tfoot>';
+    $("tbl").innerHTML=head+'<tbody>'+body+'</tbody><tfoot><tr><td colspan="'+5+'"><strong>Total</strong></td><td class="num"><strong>'+eur.format(sum(rows,"base"))+'</strong></td><td class="num"><strong>'+eur.format(sum(rows,"iva"))+'</strong></td><td class="num"><strong>'+eur.format(tot)+'</strong></td><td></td></tr></tfoot>';
     afterTable(rows);
+  }
+  function renderSubTabs(isIn){
+    var el=$("subTabs");el.hidden=!isIn;if(!isIn)return;
+    var base=state.ingresos.filter(inPeriod),defs=[["all","Todos",sum(base,"base")],["C","Comisiones (C)",sumSub(base,"C")],["E","Venta de material (E)",sumSub(base,"E")]];
+    el.innerHTML=defs.map(function(d){return'<button type="button" data-sub="'+d[0]+'" aria-pressed="'+(state.sub===d[0])+'">'+d[1]+' · '+eur0.format(d[2])+'</button>'}).join("");
   }
   function visibleRows(){
     var isIn=state.list==="in",rows=(isIn?state.ingresos:state.gastos).filter(inPeriod),q=$("q").value.trim().toLowerCase();
     if(q)rows=rows.filter(function(r){return[r.num,r.fabricante,r.empresa,r.categoria].join(" ").toLowerCase().indexOf(q)>=0});
+    if(state.list==="in"&&state.sub!=="all")rows=rows.filter(function(r){return subOf(r.num)===state.sub});
     return rows;
   }
   function selIds(){var v={};visibleRows().forEach(function(r){v[r.id]=1});return Object.keys(state.sel).filter(function(id){return state.sel[id]&&v[id]})}
@@ -347,6 +359,7 @@ tr.sel td{background:var(--soft)}
     $("whoText").textContent=k==="in"?"Fabricante":"Empresa remitente";
     $("lblCat").hidden=k==="in";
     $("btnSave").textContent=(state.editId?"Actualizar ":"Guardar ")+(k==="in"?"ingreso":"gasto");
+    hint();
     var names={};(k==="in"?state.ingresos:state.gastos).forEach(function(r){var n=k==="in"?r.fabricante:r.empresa;if(n)names[n]=1});
     $("whoList").innerHTML=Object.keys(names).sort().map(function(n){return'<option value="'+esc(n)+'">'}).join("");
   }
@@ -356,6 +369,8 @@ tr.sel td{background:var(--soft)}
   }
   function msg(t,err){var m=$("msg");m.textContent=t;m.className="msg"+(err?" err":"")}
   $("fCat").innerHTML=CATS.map(function(c){return"<option>"+c+"</option>"}).join("");
+  function hint(){var h=$("numHint");if(state.kind!=="in"){h.textContent="";return}var v=$("fNum").value.trim();h.textContent=!v?"Empieza por C = comisiones, por E = venta de material.":"Se clasificará como: "+subLabel(v)}
+  $("fNum").addEventListener("input",hint);
   $("tabIn").onclick=function(){if(!state.editId){setKind("in")}};
   $("tabOut").onclick=function(){if(!state.editId){setKind("out")}};
   $("btnCancel").onclick=function(){resetForm();msg("")};
@@ -378,6 +393,7 @@ tr.sel td{background:var(--soft)}
   $("lstIn").onclick=function(){state.list="in";state.confirmId=null;state.sel={};state.bulkConfirm=false;syncList();renderTable()};
   $("lstOut").onclick=function(){state.list="out";state.confirmId=null;state.sel={};state.bulkConfirm=false;syncList();renderTable()};
   $("q").oninput=renderTable;
+  $("subTabs").addEventListener("click",function(e){var b=e.target.closest("button[data-sub]");if(!b)return;state.sub=b.dataset.sub;state.sel={};state.bulkConfirm=false;renderTable()});
   $("fYear").onchange=render;$("fPeriod").onchange=render;
   $("tbl").addEventListener("change",function(e){
     var el=e.target;
@@ -416,8 +432,8 @@ tr.sel td{background:var(--soft)}
   /* ---------- CSV ---------- */
   $("btnCsv").onclick=function(){
     var isIn=state.list==="in",rows=(isIn?state.ingresos:state.gastos).filter(inPeriod);
-    var cols=isIn?["num","fecha","fabricante","base","iva"]:["num","fecha","empresa","categoria","base","iva"];
-    var csv=[cols.join(";")].concat(rows.map(function(r){return cols.map(function(c){var v=r[c]==null?"":String(r[c]);if(c==="base"||c==="iva")v=v.replace(".",",");return'"'+v.replace(/"/g,'""')+'"'}).join(";")})).join("\n");
+    var cols=isIn?["num","fecha","fabricante","tipo","base","iva"]:["num","fecha","empresa","categoria","base","iva"];
+    var csv=[cols.join(";")].concat(rows.map(function(r){return cols.map(function(c){var v=c==="tipo"?subLabel(r.num):r[c]==null?"":String(r[c]);if(c==="base"||c==="iva")v=v.replace(".",",");return'"'+v.replace(/"/g,'""')+'"'}).join(";")})).join("\n");
     var name=(isIn?"ingresos":"gastos")+"-"+$("fYear").value+".csv";
     claude.use("downloads").then(function(d){
       if(!d){msg("La descarga no está disponible en esta vista.",true);return}
