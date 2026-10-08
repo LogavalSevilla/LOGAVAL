@@ -220,7 +220,7 @@ tr.sel td{background:var(--soft)}
 
 <script>
 (function(){
-  var CATS=["Amazon","Comisiones","Comisiones bancarias","Coche","Gestoría","Informática","Legalización Doc.","Mensajería","Mercadería","Oficina","Seguros","Telefonía","Ttes. Terrestre","Viajes"].sort(function(a,b){return a.localeCompare(b,"es")}).concat(["Otros"]);
+  var CATS=["Amazon","Comisiones","Comisiones bancarias","Coche","Gestoría","Informática","Legalización Doc.","Mensajería","Mercadería","Nómina","Oficina","Seguros","Telefonía","Ttes. Terrestre","Viajes"].sort(function(a,b){return a.localeCompare(b,"es")}).concat(["Otros"]);
   var MONTHS=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
   var state={ingresos:[],gastos:[],kind:"in",list:"in",editId:null,confirmId:null,sel:{},bulkConfirm:false,sub:"all",editKind:null,reglas:[]};
   var db=null, LS="logaval-panel-v1";
@@ -544,6 +544,7 @@ tr.sel td{background:var(--soft)}
       if(!sample)throw new Error("La lectura automática con IA no está disponible en esta vista.");
       var prompt="Extrae las facturas del siguiente documento ("+fname+"). Contexto: LOGAVAL EXPORT TRADING, SLU es una agencia comercial de cerámica. Sus INGRESOS son facturas que Logaval emite a fabricantes (normalmente comisiones). Sus GASTOS son facturas que recibe de otras empresas.\n"+
         "Devuelve SOLO un array JSON (sin texto adicional). Cada elemento: {\"tipo\":\"ingreso\"|\"gasto\",\"num\":\"número de factura\",\"fecha\":\"YYYY-MM-DD\",\"empresa\":\"si es ingreso, el fabricante cliente; si es gasto, la empresa que emite la factura\",\"categoria\":\"solo gastos, una de: "+CATS.join(", ")+"\",\"base\":número base imponible en euros sin IVA,\"iva\":número importe del IVA en euros}.\n"+
+        "Si el documento es una nómina o recibo de salarios: tipo gasto, categoria Nómina, num \"Nómina AAAA-MM\" del periodo liquidado, empresa el nombre del trabajador, base el importe bruto (devengado) y iva 0.\n"+
         "Usa punto decimal. Si algún dato no aparece, deja cadena vacía o 0. No inventes datos.\n\nDOCUMENTO:\n"+text.slice(0,30000);
       return sample.json(prompt,{cache:false,modelTier:"quick"});
     }).then(function(arr){
