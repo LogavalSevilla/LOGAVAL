@@ -80,6 +80,8 @@ td.acts{text-align:right;white-space:nowrap}
 .tabs2 button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:99px;padding:5px 14px;cursor:pointer;font-weight:600}
 .tabs2 button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .note{color:var(--muted);font-size:12px}
+.rform{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;align-items:end;margin-top:10px}
+.rule{display:flex;gap:10px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding:8px 0;flex-wrap:wrap}
 .bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--soft);border-radius:8px;padding:8px 12px;margin-bottom:10px}
 .bulk span{flex:1;min-width:140px;font-weight:600}
 td.c1,th.c1{width:30px;padding-right:0}
@@ -131,7 +133,7 @@ tr.sel td{background:var(--soft)}
         <div id="chart"></div>
       </section>
       <div class="two">
-        <section class="panel"><div class="panel-h"><h2>Ingresos por fabricante</h2></div><div class="bars" id="byMaker"></div></section>
+        <section class="panel"><div class="panel-h"><h2>Ingresos por empresa</h2></div><div class="bars" id="byMaker"></div></section>
         <section class="panel"><div class="panel-h"><h2>Gastos por categoría</h2></div><div class="bars" id="byCat"></div></section>
       </div>
     </div>
@@ -147,7 +149,7 @@ tr.sel td{background:var(--soft)}
           <label>Fecha factura<input id="fDate" type="date" required></label>
         </div>
         <div class="note" id="numHint"></div>
-        <label id="lblWho"><span id="whoText">Fabricante</span><input id="fWho" list="whoList" required></label>
+        <label id="lblWho"><span id="whoText">Empresa</span><input id="fWho" list="whoList" required></label>
         <datalist id="whoList"></datalist>
         <label id="lblCat" hidden>Categoría
           <select id="fCat"></select>
@@ -200,13 +202,27 @@ tr.sel td{background:var(--soft)}
     <div class="tablewrap"><table id="tbl"></table></div>
     <p class="note" id="storeNote"></p>
   </section>
+
+  <section class="panel" aria-label="Reglas automáticas">
+    <div class="panel-h"><h2>Reglas automáticas de ingreso o gasto</h2>
+      <button class="btn ghost small" id="btnApplyRules" type="button">Aplicar a facturas existentes</button></div>
+    <p class="note">Si el número empieza por el prefijo (y, si lo indicas, la empresa contiene ese texto), la factura se guarda con el tipo elegido al crearla o importarla. Por ejemplo: prefijo 1/26 y empresa Kerlife son gastos.</p>
+    <form id="ruleForm" class="rform" autocomplete="off">
+      <label>Prefijo del nº<input id="rPref" placeholder="1/26"></label>
+      <label>Empresa (opcional)<input id="rEmp" placeholder="Kerlife"></label>
+      <label>Tipo<select id="rTipo"><option value="out">Gasto</option><option value="in">Ingreso</option></select></label>
+      <button class="btn" type="submit">Añadir regla</button>
+    </form>
+    <div class="msg" id="ruleMsg" role="status"></div>
+    <div id="ruleList"></div>
+  </section>
 </div>
 
 <script>
 (function(){
   var CATS=["Informática","Coche","Mensajería","Mercadería","Telefonía","Amazon","Viajes","Gestoría","Ferias y eventos","Seguros","Comisiones bancarias","Otros"];
   var MONTHS=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-  var state={ingresos:[],gastos:[],kind:"in",list:"in",editId:null,confirmId:null,sel:{},bulkConfirm:false,sub:"all"};
+  var state={ingresos:[],gastos:[],kind:"in",list:"in",editId:null,confirmId:null,sel:{},bulkConfirm:false,sub:"all",editKind:null,reglas:[]};
   var db=null, LS="logaval-panel-v1";
 
   var $=function(id){return document.getElementById(id)};
@@ -219,9 +235,33 @@ tr.sel td{background:var(--soft)}
   function nz(v){v=parseFloat(v);return isFinite(v)?v:0}
 
   /* ---------- almacenamiento ---------- */
-  function lsLoad(){try{var d=JSON.parse(localStorage.getItem(LS)||"{}");state.ingresos=d.ingresos||[];state.gastos=d.gastos||[]}catch(e){}}
-  function lsSave(){try{localStorage.setItem(LS,JSON.stringify({ingresos:state.ingresos,gastos:state.gastos}))}catch(e){}}
+  function lsLoad(){try{var d=JSON.parse(localStorage.getItem(LS)||"{}");state.ingresos=d.ingresos||[];state.gastos=d.gastos||[];state.reglas=d.reglas||[]}catch(e){}}
+  function lsSave(){try{localStorage.setItem(LS,JSON.stringify({ingresos:state.ingresos,gastos:state.gastos,reglas:state.reglas}))}catch(e){}}
   function toRows(snap){return snap.docs.map(function(d){var o=Object.assign({},d.data());o.id=d.id;return o})}
+  function whoOf(r,kind){return(kind==="in"?r.fabricante:r.empresa)||""}
+  function toRec(r,from,to){
+    var rec={num:r.num,fecha:r.fecha,base:nz(r.base),iva:nz(r.iva)},w=whoOf(r,from);
+    if(to==="in")rec.fabricante=w;else{rec.empresa=w;rec.categoria=r.categoria||"Otros"}
+    return rec;
+  }
+  function matchRule(num,who){
+    var n=String(num||"").trim().toLowerCase(),w=norm(who);
+    for(var i=0;i<state.reglas.length;i++){
+      var g=state.reglas[i],pf=String(g.prefijo||"").trim().toLowerCase(),em=norm(g.empresa);
+      if(!pf&&!em)continue;
+      if(pf&&n.indexOf(pf)!==0)continue;
+      if(em&&w.indexOf(em)<0)continue;
+      return g.tipo;
+    }
+    return null;
+  }
+  function moveRows(ids,from){
+    var to=from==="in"?"out":"in",src=from==="in"?state.ingresos:state.gastos,n=0;
+    return ids.reduce(function(ch,id){return ch.then(function(){
+      var r=src.filter(function(x){return x.id===id})[0];if(!r)return;
+      return save(to,toRec(r,from,to)).then(function(){return remove(from,id)}).then(function(){n++;delete state.sel[id]});
+    })},Promise.resolve()).then(function(){return n});
+  }
   function col(kind){return kind==="in"?"ingresos":"gastos"}
 
   function save(kind,rec,id){
@@ -272,7 +312,7 @@ tr.sel td{background:var(--soft)}
     renderChart();
     renderBars("byMaker",group(inc,"fabricante"),"var(--in)","Aún no hay ingresos en este periodo.");
     renderBars("byCat",group(exp,"categoria"),"var(--out)","Aún no hay gastos en este periodo.");
-    renderTable();
+    renderTable();renderRules();
     $("storeNote").textContent=db?"Los datos se guardan en la nube y se comparten con quien abra este panel.":"Los datos se guardan solo en este navegador.";
   }
   function group(arr,f){
@@ -314,7 +354,7 @@ tr.sel td{background:var(--soft)}
     var isIn=state.list==="in",rows=visibleRows();
     renderSubTabs(isIn);
     rows.sort(function(a,b){return(b.fecha||"").localeCompare(a.fecha||"")});
-    var head='<thead><tr><th class="c1"><input type="checkbox" id="selAll" aria-label="Seleccionar todas"></th><th>Nº factura</th><th>Fecha</th><th>'+(isIn?'Fabricante':'Empresa')+'</th><th>'+(isIn?'Tipo':'Categoría')+'</th>'+'<th class="num">Base</th><th class="num">IVA</th><th class="num">Total</th><th></th></tr></thead>';
+    var head='<thead><tr><th class="c1"><input type="checkbox" id="selAll" aria-label="Seleccionar todas"></th><th>Nº factura</th><th>Fecha</th><th>'+'Empresa'+'</th><th>'+(isIn?'Tipo':'Categoría')+'</th>'+'<th class="num">Base</th><th class="num">IVA</th><th class="num">Total</th><th></th></tr></thead>';
     if(!rows.length){
       $("tbl").innerHTML=head+'<tbody><tr><td colspan="9" class="empty">'+(isIn?'No hay ingresos':'No hay gastos')+' en este periodo. Añade el primero con el formulario.</td></tr></tbody>';afterTable([]);return;
     }
@@ -349,42 +389,45 @@ tr.sel td{background:var(--soft)}
     b.hidden=n===0;if(!n){state.bulkConfirm=false;return}
     b.innerHTML='<span>'+n+' seleccionada'+(n>1?'s':'')+'</span>'+
       (state.bulkConfirm?'<button class="btn danger" data-bulk="go" type="button">Sí, eliminar '+n+'</button><button class="btn ghost" data-bulk="no" type="button">No</button>'
-        :'<button class="btn danger" data-bulk="ask" type="button">Eliminar seleccionadas</button><button class="btn ghost" data-bulk="clear" type="button">Quitar selección</button>');
+        :'<button class="btn ghost" data-bulk="move" type="button">Pasar a '+(state.list==="in"?"gastos":"ingresos")+'</button><button class="btn danger" data-bulk="ask" type="button">Eliminar seleccionadas</button><button class="btn ghost" data-bulk="clear" type="button">Quitar selección</button>');
   }
 
   /* ---------- formulario ---------- */
   function setKind(k){
     state.kind=k;
     $("tabIn").setAttribute("aria-pressed",k==="in");$("tabOut").setAttribute("aria-pressed",k==="out");
-    $("whoText").textContent=k==="in"?"Fabricante":"Empresa remitente";
+    $("whoText").textContent=k==="in"?"Empresa":"Empresa remitente";
     $("lblCat").hidden=k==="in";
-    $("btnSave").textContent=(state.editId?"Actualizar ":"Guardar ")+(k==="in"?"ingreso":"gasto");
+    $("btnSave").textContent=(state.editId?(state.editKind&&state.editKind!==k?"Mover como ":"Actualizar "):"Guardar ")+(k==="in"?"ingreso":"gasto");
     hint();
     var names={};(k==="in"?state.ingresos:state.gastos).forEach(function(r){var n=k==="in"?r.fabricante:r.empresa;if(n)names[n]=1});
     $("whoList").innerHTML=Object.keys(names).sort().map(function(n){return'<option value="'+esc(n)+'">'}).join("");
   }
   function resetForm(){
-    state.editId=null;$("form").reset();$("fIva").value="0";$("fDate").value=new Date().toISOString().slice(0,10);
+    state.editId=null;state.editKind=null;$("form").reset();$("fIva").value="0";$("fDate").value=new Date().toISOString().slice(0,10);
     $("btnCancel").hidden=true;setKind(state.kind);
   }
   function msg(t,err){var m=$("msg");m.textContent=t;m.className="msg"+(err?" err":"")}
   $("fCat").innerHTML=CATS.map(function(c){return"<option>"+c+"</option>"}).join("");
   function hint(){var h=$("numHint");if(state.kind!=="in"){h.textContent="";return}var v=$("fNum").value.trim();h.textContent=!v?"Empieza por C = comisiones, por E = venta de material.":"Se clasificará como: "+subLabel(v)}
   $("fNum").addEventListener("input",hint);
-  $("tabIn").onclick=function(){if(!state.editId){setKind("in")}};
-  $("tabOut").onclick=function(){if(!state.editId){setKind("out")}};
+  $("tabIn").onclick=function(){setKind("in")};
+  $("tabOut").onclick=function(){if(state.editId&&state.editKind==="in")$("fCat").value="Otros";setKind("out")};
   $("btnCancel").onclick=function(){resetForm();msg("")};
   $("form").addEventListener("submit",function(e){
     e.preventDefault();
-    var k=state.kind,rec={num:$("fNum").value.trim(),fecha:$("fDate").value,base:nz($("fBase").value),iva:nz($("fIva").value)};
-    if(k==="in")rec.fabricante=$("fWho").value.trim();else{rec.empresa=$("fWho").value.trim();rec.categoria=$("fCat").value}
-    var dup=(k==="in"?state.ingresos:state.gastos).some(function(r){return r.num===rec.num&&r.id!==state.editId&&(k==="in"?r.fabricante===rec.fabricante:r.empresa===rec.empresa)});
+    var k=state.kind,num=$("fNum").value.trim(),who=$("fWho").value.trim(),note="";
+    if(!state.editId){var rk=matchRule(num,who);if(rk&&rk!==k){k=rk;note=" Regla automática: guardada como "+(k==="in"?"ingreso":"gasto")+"."}}
+    var rec={num:num,fecha:$("fDate").value,base:nz($("fBase").value),iva:nz($("fIva").value)};
+    if(k==="in")rec.fabricante=who;else{rec.empresa=who;rec.categoria=$("fCat").value}
+    var dup=(k==="in"?state.ingresos:state.gastos).some(function(r){return r.num===rec.num&&r.id!==state.editId&&whoOf(r,k)===who});
     if(dup){msg("Ya existe una factura con ese número para esa empresa.",true);return}
-    var wasEdit=!!state.editId;
-    save(k,rec,state.editId).then(function(){
+    var wasEdit=!!state.editId,editId=state.editId,from=state.editKind,moving=wasEdit&&from&&from!==k;
+    var pr=moving?save(k,rec).then(function(){return remove(from,editId)}):save(k,rec,state.editId);
+    pr.then(function(){
       state.list=k;syncList();
       $("fYear").value=rec.fecha.slice(0,4);
-      resetForm();msg(wasEdit?"Factura actualizada.":"Factura guardada.");render();
+      resetForm();msg((moving?"Factura movida a "+(k==="in"?"ingresos":"gastos")+".":wasEdit?"Factura actualizada.":"Factura guardada.")+note);render();
     }).catch(function(err){msg("No se pudo guardar: "+((err&&err.message)||"error"),true)});
   });
 
@@ -403,7 +446,12 @@ tr.sel td{background:var(--soft)}
   $("bulk").addEventListener("click",function(e){
     var b=e.target.closest("button[data-bulk]");if(!b)return;
     var a=b.dataset.bulk,k=state.list;
-    if(a==="ask"){state.bulkConfirm=true;renderTable()}
+    if(a==="move"){
+      var mids=selIds();b.disabled=true;
+      moveRows(mids,k).then(function(n){msg(n+" factura"+(n>1?"s movidas":" movida")+" a "+(k==="in"?"gastos":"ingresos")+".");render()})
+        .catch(function(){msg("No se pudieron mover todas las facturas.",true);render()});
+    }
+    else if(a==="ask"){state.bulkConfirm=true;renderTable()}
     else if(a==="no"){state.bulkConfirm=false;renderTable()}
     else if(a==="clear"){state.sel={};state.bulkConfirm=false;renderTable()}
     else if(a==="go"){
@@ -418,11 +466,11 @@ tr.sel td{background:var(--soft)}
     var id=b.dataset.id,k=state.list,rows=k==="in"?state.ingresos:state.gastos;
     var r=rows.filter(function(x){return x.id===id})[0];if(!r)return;
     if(b.dataset.act==="edit"){
-      state.editId=null;state.kind=k;setKind(k);state.editId=id;
+      state.editId=null;state.kind=k;setKind(k);state.editId=id;state.editKind=k;
       $("fNum").value=r.num||"";$("fDate").value=r.fecha||"";$("fWho").value=(k==="in"?r.fabricante:r.empresa)||"";
       if(k==="out")$("fCat").value=r.categoria||"Otros";
       $("fBase").value=r.base;$("fIva").value=r.iva;
-      $("btnCancel").hidden=false;setKind(k);msg("Editando factura "+r.num+".");
+      $("btnCancel").hidden=false;setKind(k);msg("Editando factura "+r.num+". Cambia entre Ingreso y Gasto arriba para moverla.");
       $("fNum").focus();
     }else if(state.confirmId===id){
       state.confirmId=null;delete state.sel[id];remove(k,id).then(function(){msg('Factura eliminada.')}).catch(function(){msg('No se pudo eliminar.',true)});
@@ -433,7 +481,7 @@ tr.sel td{background:var(--soft)}
   $("btnCsv").onclick=function(){
     var isIn=state.list==="in",rows=(isIn?state.ingresos:state.gastos).filter(inPeriod);
     var cols=isIn?["num","fecha","fabricante","tipo","base","iva"]:["num","fecha","empresa","categoria","base","iva"];
-    var csv=[cols.join(";")].concat(rows.map(function(r){return cols.map(function(c){var v=c==="tipo"?subLabel(r.num):r[c]==null?"":String(r[c]);if(c==="base"||c==="iva")v=v.replace(".",",");return'"'+v.replace(/"/g,'""')+'"'}).join(";")})).join("\n");
+    var csv=[cols.map(function(c){return c==="fabricante"?"empresa":c}).join(";")].concat(rows.map(function(r){return cols.map(function(c){var v=c==="tipo"?subLabel(r.num):r[c]==null?"":String(r[c]);if(c==="base"||c==="iva")v=v.replace(".",",");return'"'+v.replace(/"/g,'""')+'"'}).join(";")})).join("\n");
     var name=(isIn?"ingresos":"gastos")+"-"+$("fYear").value+".csv";
     claude.use("downloads").then(function(d){
       if(!d){msg("La descarga no está disponible en esta vista.",true);return}
@@ -526,6 +574,7 @@ tr.sel td{background:var(--soft)}
         }).catch(function(e){errs.push(f.name+": "+((e&&e.message)||"error"))});
       });
     },Promise.resolve()).then(function(){
+      pending.forEach(function(r){if(!r.ruled){var rk=matchRule(r.num,r.who);if(rk)r.tipo=rk;r.ruled=true}});
       pending.forEach(function(r){r.dupe=isDupe(r);if(r.dupe&&!r.touched)r.sel=false});
       impMsg(added?added+" factura(s) leída(s). Revísalas abajo.":"",false);
       if(errs.length)impMsg((added?added+" leída(s). ":"")+"Problemas: "+errs.join(" · "),true);
@@ -575,12 +624,49 @@ tr.sel td{background:var(--soft)}
   ["dragleave","drop"].forEach(function(ev){$("drop").addEventListener(ev,function(e){e.preventDefault();$("drop").classList.remove("over")})});
   $("drop").addEventListener("drop",function(e){if(e.dataTransfer)handleFiles(e.dataTransfer.files)});
 
+  /* ---------- reglas ---------- */
+  function renderRules(){
+    var el=$("ruleList");
+    if(!state.reglas.length){el.innerHTML='<div class="empty">Aún no hay reglas.</div>';return}
+    el.innerHTML=state.reglas.map(function(g){
+      return'<div class="rule"><span>Nº que empieza por <b>'+esc(g.prefijo||"cualquiera")+'</b>'+(g.empresa?' · empresa con <b>'+esc(g.empresa)+'</b>':'')+' → <span class="pill">'+(g.tipo==="in"?"Ingreso":"Gasto")+'</span></span><button class="btn small danger" type="button" data-rule="'+esc(g.id)+'">Borrar</button></div>';
+    }).join("");
+  }
+  function rmsg(t,err){var m=$("ruleMsg");m.textContent=t;m.className="msg"+(err?" err":"")}
+  $("ruleForm").addEventListener("submit",function(e){
+    e.preventDefault();
+    var rec={prefijo:$("rPref").value.trim(),empresa:$("rEmp").value.trim(),tipo:$("rTipo").value};
+    if(!rec.prefijo&&!rec.empresa){rmsg("Indica un prefijo, una empresa o ambos.",true);return}
+    var pr;
+    if(db)pr=db.collection("reglas").add(rec);
+    else{state.reglas.push(Object.assign({id:"r"+Date.now()},rec));lsSave();pr=Promise.resolve()}
+    pr.then(function(){$("ruleForm").reset();rmsg("Regla añadida. Pulsa «Aplicar a facturas existentes» para revisar las ya cargadas.");renderRules()})
+      .catch(function(){rmsg("No se pudo guardar la regla.",true)});
+  });
+  $("ruleList").addEventListener("click",function(e){
+    var b=e.target.closest("button[data-rule]");if(!b)return;var id=b.dataset.rule;
+    var pr;
+    if(db)pr=db.collection("reglas").doc(id).delete();
+    else{state.reglas=state.reglas.filter(function(g){return g.id!==id});lsSave();pr=Promise.resolve()}
+    pr.then(function(){renderRules()}).catch(function(){rmsg("No se pudo borrar la regla.",true)});
+  });
+  $("btnApplyRules").onclick=function(){
+    var toOut=state.ingresos.filter(function(r){return matchRule(r.num,whoOf(r,"in"))==="out"}).map(function(r){return r.id});
+    var toIn=state.gastos.filter(function(r){return matchRule(r.num,whoOf(r,"out"))==="in"}).map(function(r){return r.id});
+    if(!toOut.length&&!toIn.length){rmsg("Ninguna factura cargada necesita cambiar de tipo.");return}
+    $("btnApplyRules").disabled=true;
+    moveRows(toOut,"in").then(function(a){return moveRows(toIn,"out").then(function(b){return a+b})})
+      .then(function(n){rmsg(n+" factura"+(n>1?"s movidas":" movida")+" según las reglas.");render()})
+      .catch(function(){rmsg("No se pudieron mover todas las facturas.",true);render()})
+      .then(function(){$("btnApplyRules").disabled=false});
+  };
+
   /* ---------- arranque ---------- */
   $("fPeriod").value="all";resetForm();render();
   (window.claude&&claude.use?claude.use("db"):Promise.resolve(null)).then(function(d){
     if(!d){lsLoad();render();return}
     db=d;
-    ["ingresos","gastos"].forEach(function(name){
+    ["ingresos","gastos","reglas"].forEach(function(name){
       db.collection(name).onSnapshot(function(snap){state[name]=toRows(snap);render();setKind(state.kind)},function(){});
     });
   }).catch(function(){lsLoad();render()});
