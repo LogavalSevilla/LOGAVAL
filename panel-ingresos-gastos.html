@@ -220,7 +220,7 @@ tr.sel td{background:var(--soft)}
 
 <script>
 (function(){
-  var CATS=["Amazon","Comisiones","Comisiones bancarias","Coche","Gestoría","Informática","Legalización Doc.","Mensajería","Mercadería","Nómina","Oficina","Seguros","Telefonía","Ttes. Terrestre","Viajes"].sort(function(a,b){return a.localeCompare(b,"es")}).concat(["Otros"]);
+  var CATS=["Amazon","Comisiones","Comisiones bancarias","Coche","Gestoría","Informática","Legalización Doc.","Mensajería","Mercadería","Nómina","Oficina","Avión","Gasolina","Hotel","Renting Coche","Seguros","Telefonía","Ttes. Terrestre","Viajes"].sort(function(a,b){return a.localeCompare(b,"es")}).concat(["Otros"]);
   var MONTHS=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
   var state={ingresos:[],gastos:[],kind:"in",list:"in",editId:null,confirmId:null,sel:{},bulkConfirm:false,sub:"all",editKind:null,reglas:[]};
   var db=null, LS="logaval-panel-v1";
