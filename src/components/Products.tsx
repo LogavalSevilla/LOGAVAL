@@ -4,7 +4,7 @@ import type { Dictionary } from "@/i18n/translations";
 const IMAGES: Record<number, string> = {
   0: "/images/indoor-herringbone.jpg",
   1: "/images/outdoor-pool.jpg",
-  2: "/images/ceramica-nightlux-03.jpg",
+  2: "/images/luxury-blue-agate.jpg",
   3: "/images/terracotta-mediterraneo-mar.jpg",
 };
 const GRADIENTS = [
