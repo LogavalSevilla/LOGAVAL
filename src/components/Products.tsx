@@ -2,8 +2,10 @@ import Image from "next/image";
 import type { Dictionary } from "@/i18n/translations";
 
 const IMAGES: Record<number, string> = {
-  0: "/images/ceramica-nightlux-01.jpg",
+  0: "/images/indoor-mediterraneo-mar.jpg",
+  1: "/images/outdoor-pool.jpg",
   2: "/images/ceramica-nightlux-03.jpg",
+  3: "/images/terracotta-herringbone.jpg",
 };
 const GRADIENTS = [
   "from-navy to-navy-light",
