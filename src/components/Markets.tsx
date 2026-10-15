@@ -5,7 +5,7 @@ export default function Markets({ dict }: { dict: Dictionary }) {
   const { markets, nav } = dict;
   return (
     <section id="markets" className="bg-navy text-cream">
-      <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-2 lg:items-center lg:px-10 lg:py-28">
+      <div className="mx-auto grid max-w-7xl gap-12 px-6 pt-20 pb-8 lg:grid-cols-2 lg:items-center lg:px-10 lg:pt-28 lg:pb-10">
         <div>
           <p className="text-sm font-semibold tracking-[0.3em] text-gold">
             {nav.markets.toUpperCase()}
@@ -19,10 +19,10 @@ export default function Markets({ dict }: { dict: Dictionary }) {
         </div>
         <div className="overflow-hidden rounded-sm bg-cream/5">
           <Image
-            src="/images/gcc-map.jpg"
+            src="/images/gcc-map.webp"
             alt="GCC — Gulf Cooperation Council countries map"
-            width={612}
-            height={499}
+            width={1536}
+            height={1024}
             className="h-auto w-full object-contain"
           />
         </div>
