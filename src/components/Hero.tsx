@@ -41,8 +41,8 @@ export default function Hero({ dict }: { dict: Dictionary }) {
           </div>
           <div className="relative row-span-2 overflow-hidden rounded-sm">
             <Image
-              src="/images/ceramica-nightlux-01.jpg"
-              alt="LOGAVAL ceramic tile detail"
+              src="/images/hero-burgundy-tiles.webp"
+              alt="LOGAVAL textured burgundy ceramic tiling"
               fill
               sizes="(min-width: 1024px) 220px, 45vw"
               className="object-cover"
