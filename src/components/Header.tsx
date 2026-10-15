@@ -1,18 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
+import { locales, type Dictionary, type Locale } from "@/i18n/translations";
 
-const NAV_LINKS = [
-  { href: "#nosotros", label: "Sobre nosotros" },
-  { href: "#proceso", label: "Proceso" },
-  { href: "#productos", label: "Productos" },
-  { href: "#contacto", label: "Contacto" },
-];
+const LOCALE_LABELS: Record<Locale, string> = { en: "EN", es: "ES", it: "IT" };
 
-export default function Header() {
+export default function Header({
+  locale,
+  dict,
+}: {
+  locale: Locale;
+  dict: Dictionary;
+}) {
+  const navItems = [
+    { href: "#about", label: dict.nav.about },
+    { href: "#services", label: dict.nav.services },
+    { href: "#manufacturers", label: dict.nav.manufacturers },
+    { href: "#products", label: dict.nav.products },
+    { href: "#markets", label: dict.nav.markets },
+  ];
+
   return (
     <header className="sticky top-0 z-50 border-b border-navy/10 bg-cream/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-10">
-        <Link href="#inicio">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 lg:px-10">
+        <Link href={`/${locale}#inicio`} className="shrink-0">
           <Image
             src="/images/logo.png"
             alt="LOGAVAL Export Trading"
@@ -22,23 +32,40 @@ export default function Header() {
             className="h-10 w-auto"
           />
         </Link>
-        <nav className="hidden items-center gap-8 md:flex">
-          {NAV_LINKS.map((link) => (
+
+        <nav className="hidden items-center gap-6 lg:flex">
+          {navItems.map((item) => (
             <a
-              key={link.href}
-              href={link.href}
+              key={item.href}
+              href={item.href}
               className="text-sm font-medium tracking-wide text-navy transition-colors hover:text-gold"
             >
-              {link.label}
+              {item.label}
             </a>
           ))}
         </nav>
-        <a
-          href="#contacto"
-          className="hidden rounded-sm bg-navy px-5 py-2.5 text-sm font-semibold tracking-wide text-cream transition-colors hover:bg-gold md:inline-block"
-        >
-          Solicitar información
-        </a>
+
+        <div className="flex items-center gap-4">
+          <div className="hidden items-center gap-1.5 text-xs font-semibold tracking-wide text-navy/70 sm:flex">
+            {locales.map((loc, i) => (
+              <span key={loc} className="flex items-center gap-1.5">
+                <Link
+                  href={`/${loc}`}
+                  className={loc === locale ? "text-gold" : "hover:text-gold"}
+                >
+                  {LOCALE_LABELS[loc]}
+                </Link>
+                {i < locales.length - 1 && <span className="text-navy/30">·</span>}
+              </span>
+            ))}
+          </div>
+          <a
+            href="#contact"
+            className="hidden rounded-sm bg-navy px-5 py-2.5 text-sm font-semibold tracking-wide text-cream transition-colors hover:bg-gold md:inline-block"
+          >
+            {dict.nav.contact}
+          </a>
+        </div>
       </div>
     </header>
   );
