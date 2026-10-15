@@ -48,7 +48,15 @@ export default function Hero({ dict }: { dict: Dictionary }) {
               className="object-cover"
             />
           </div>
-          <div className="rounded-sm bg-gold" />
+          <div className="relative overflow-hidden rounded-sm">
+            <Image
+              src="/images/hero-pink-agate.webp"
+              alt="LOGAVAL agate-pattern ceramic tiling"
+              fill
+              sizes="(min-width: 1024px) 220px, 45vw"
+              className="object-cover"
+            />
+          </div>
         </div>
       </div>
     </section>
