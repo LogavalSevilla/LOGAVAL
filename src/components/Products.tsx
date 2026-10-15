@@ -2,12 +2,13 @@ import Image from "next/image";
 import type { Dictionary } from "@/i18n/translations";
 
 const IMAGES: Record<number, string> = {
-  0: "/images/ceramica-nightlux-03.jpg",
+  0: "/images/ceramica-nightlux-01.jpg",
+  2: "/images/ceramica-nightlux-03.jpg",
 };
 const GRADIENTS = [
   "from-navy to-navy-light",
-  "from-gold to-gold-light",
   "from-navy-light to-navy",
+  "from-gold to-gold-light",
   "from-gold-light to-gold",
 ];
 

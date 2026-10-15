@@ -164,24 +164,24 @@ const en: Dictionary = {
   products: {
     items: [
       {
-        name: "Ceramic tiles",
+        name: "Indoor ceramic tiles",
         description:
-          "Porcelain and ceramic tiles for floors and walls, from standard sizes to large-format slabs.",
+          "Porcelain and ceramic tiles for floors and walls in residential and commercial interiors.",
+      },
+      {
+        name: "Outdoor ceramic tiles",
+        description:
+          "Weather-resistant porcelain tiles for terraces, pools and outdoor flooring.",
+      },
+      {
+        name: "Luxury tiles",
+        description:
+          "Large-format, design-led collections for high-end residential and hospitality projects.",
       },
       {
         name: "Terracotta",
         description:
           "Natural clay floor tiles with a warm, traditional character, for interiors and exteriors.",
-      },
-      {
-        name: "Glass mosaic",
-        description:
-          "For pools, bathrooms and feature walls, in a wide range of colours and blends.",
-      },
-      {
-        name: "Tile trims",
-        description:
-          "Profiles that deliver a clean, durable finish in wall and floor installations: edges, corners, stair nosings, transitions and movement joints. Available in aluminium or stainless steel.",
       },
     ],
   },
@@ -308,24 +308,24 @@ const es: Dictionary = {
   products: {
     items: [
       {
-        name: "Cerámica",
+        name: "Cerámica interior",
         description:
-          "Porcelánico y cerámica para pavimento y revestimiento, desde formatos estándar hasta gran formato.",
+          "Porcelánico y cerámica para pavimento y revestimiento en interiores residenciales y comerciales.",
+      },
+      {
+        name: "Cerámica exterior",
+        description:
+          "Porcelánico resistente a la intemperie para terrazas, piscinas y pavimento exterior.",
+      },
+      {
+        name: "Cerámica de lujo",
+        description:
+          "Colecciones de gran formato y diseño premium para proyectos residenciales y hoteleros de alta gama.",
       },
       {
         name: "Terracota",
         description:
           "Pavimento de barro natural con carácter cálido y tradicional, para interior y exterior.",
-      },
-      {
-        name: "Mosaico vítreo",
-        description:
-          "Para piscinas, baños y paredes singulares, en una amplia gama de colores y mezclas.",
-      },
-      {
-        name: "Perfilería",
-        description:
-          "Perfiles que aseguran un acabado óptimo y duradero en la colocación de revestimiento y pavimento: cantos, esquinas, peldaños, transiciones y juntas de dilatación. En aluminio o acero.",
       },
     ],
   },
@@ -452,24 +452,24 @@ const it: Dictionary = {
   products: {
     items: [
       {
-        name: "Ceramica",
+        name: "Ceramica da interni",
         description:
-          "Gres porcellanato e ceramica per pavimenti e rivestimenti, dai formati standard alle grandi lastre.",
+          "Gres porcellanato e ceramica per pavimenti e rivestimenti in interni residenziali e commerciali.",
+      },
+      {
+        name: "Ceramica da esterni",
+        description:
+          "Gres porcellanato resistente alle intemperie per terrazze, piscine e pavimentazioni esterne.",
+      },
+      {
+        name: "Ceramica di lusso",
+        description:
+          "Collezioni di grande formato e design premium per progetti residenziali e alberghieri di alta gamma.",
       },
       {
         name: "Cotto",
         description:
           "Pavimenti in argilla naturale dal carattere caldo e tradizionale, per interni ed esterni.",
-      },
-      {
-        name: "Mosaico in vetro",
-        description:
-          "Per piscine, bagni e pareti decorative, in un'ampia gamma di colori e miscele.",
-      },
-      {
-        name: "Profili",
-        description:
-          "Profili che garantiscono una finitura ottimale e duratura nella posa di rivestimenti e pavimenti: bordi, angoli, gradini, raccordi e giunti di dilatazione. In alluminio o acciaio.",
       },
     ],
   },
