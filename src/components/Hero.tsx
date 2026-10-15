@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 function TileSwatch({ className = "" }: { className?: string }) {
   return <div className={`rounded-sm ${className}`} />;
 }
@@ -36,11 +38,25 @@ export default function Hero() {
         </div>
 
         <div className="grid h-[420px] grid-cols-3 grid-rows-3 gap-3">
-          <TileSwatch className="col-span-2 row-span-2 bg-navy" />
-          <TileSwatch className="bg-gold" />
-          <TileSwatch className="bg-navy-light" />
-          <TileSwatch className="bg-gold-light" />
-          <TileSwatch className="col-span-2 bg-navy/80" />
+          <div className="relative col-span-2 row-span-3 overflow-hidden rounded-sm">
+            <Image
+              src="/images/ceramica-nightlux-02.jpg"
+              alt="Baño revestido en cerámica LOGAVAL, colección Nightlux"
+              fill
+              sizes="(min-width: 1024px) 480px, 90vw"
+              className="object-cover"
+              priority
+            />
+          </div>
+          <div className="relative row-span-2 overflow-hidden rounded-sm">
+            <Image
+              src="/images/ceramica-nightlux-01.jpg"
+              alt="Detalle de cerámica LOGAVAL en baño con bañera"
+              fill
+              sizes="(min-width: 1024px) 220px, 45vw"
+              className="object-cover"
+            />
+          </div>
           <TileSwatch className="bg-gold" />
         </div>
       </div>
