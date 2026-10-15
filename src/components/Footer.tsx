@@ -15,7 +15,7 @@ export default function Footer({ dict }: { dict: Dictionary }) {
   const { footer } = dict;
   return (
     <footer className="bg-navy text-cream">
-      <div className="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+      <div className="mx-auto max-w-7xl px-6 pt-10 pb-16 lg:px-10 lg:pt-14 lg:pb-16">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
           <Logo variant="dark" />
 

@@ -18,7 +18,7 @@ export default function Products({ dict }: { dict: Dictionary }) {
   const { products, nav } = dict;
   return (
     <section id="products" className="bg-cream">
-      <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-28">
+      <div className="mx-auto max-w-7xl px-6 pt-10 pb-20 lg:px-10 lg:pt-14 lg:pb-28">
         <p className="text-sm font-semibold tracking-[0.3em] text-gold">
           {nav.products.toUpperCase()}
         </p>

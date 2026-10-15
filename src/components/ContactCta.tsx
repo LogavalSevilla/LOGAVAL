@@ -32,7 +32,7 @@ export default function ContactCta({ dict }: { dict: Dictionary }) {
 
   return (
     <section id="contact" className="bg-navy text-cream">
-      <div className="mx-auto max-w-3xl px-6 pt-8 pb-20 lg:px-10 lg:pt-10 lg:pb-28">
+      <div className="mx-auto max-w-3xl px-6 pt-10 pb-10 lg:px-10 lg:pt-14 lg:pb-14">
         <h2 className="font-serif text-3xl text-cream sm:text-4xl">
           {cta.title}
         </h2>

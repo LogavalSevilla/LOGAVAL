@@ -4,7 +4,7 @@ export default function Origin({ dict }: { dict: Dictionary }) {
   const { origin, nav } = dict;
   return (
     <section id="manufacturers" className="bg-cream">
-      <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-28">
+      <div className="mx-auto max-w-7xl px-6 pt-10 pb-10 lg:px-10 lg:pt-14 lg:pb-14">
         <p className="text-sm font-semibold tracking-[0.3em] text-gold">
           {nav.manufacturers.toUpperCase()}
         </p>

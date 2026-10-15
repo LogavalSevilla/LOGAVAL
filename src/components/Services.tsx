@@ -4,7 +4,7 @@ export default function Services({ dict }: { dict: Dictionary }) {
   const { services, nav } = dict;
   return (
     <section id="services" className="bg-cream">
-      <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-28">
+      <div className="mx-auto max-w-7xl px-6 pt-20 pb-10 lg:px-10 lg:pt-28 lg:pb-14">
         <p className="text-sm font-semibold tracking-[0.3em] text-gold">
           {nav.services.toUpperCase()}
         </p>
