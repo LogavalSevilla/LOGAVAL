@@ -31,8 +31,8 @@ export default function Hero({ dict }: { dict: Dictionary }) {
         <div className="grid h-[420px] grid-cols-3 grid-rows-3 gap-3">
           <div className="relative col-span-2 row-span-3 overflow-hidden rounded-sm">
             <Image
-              src="/images/ceramica-nightlux-02.jpg"
-              alt="LOGAVAL ceramic tiling, Nightlux collection"
+              src="/images/hero-luxury-vanity.jpg"
+              alt="LOGAVAL luxury ceramic tiling and marble vanity"
               fill
               sizes="(min-width: 1024px) 480px, 90vw"
               className="object-cover"
