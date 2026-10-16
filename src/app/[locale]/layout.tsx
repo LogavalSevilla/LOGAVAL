@@ -28,7 +28,11 @@ export async function generateMetadata({
   const { locale } = await params;
   if (!locales.includes(locale as Locale)) return {};
   const dict = dictionaries[locale as Locale];
-  return { title: dict.meta.title, description: dict.meta.description };
+  return {
+    metadataBase: new URL("https://logaval.es"),
+    title: dict.meta.title,
+    description: dict.meta.description,
+  };
 }
 
 export default async function LocaleLayout({
