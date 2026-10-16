@@ -51,13 +51,11 @@ export type Dictionary = {
     button: string;
     form: {
       name: string;
-      company: string;
       country: string;
       clientType: string;
       clientTypeOptions: string[];
       projectType: string;
       projectTypeOptions: string[];
-      volume: string;
       message: string;
       send: string;
     };
@@ -195,13 +193,11 @@ const en: Dictionary = {
     button: "Book a meeting",
     form: {
       name: "Name",
-      company: "Company",
       country: "Country",
       clientType: "Client type",
       clientTypeOptions: ["Distributor", "Contractor", "Developer", "Architect"],
       projectType: "Project type",
       projectTypeOptions: ["Residential", "Hospitality", "Commercial"],
-      volume: "Estimated volume (m²)",
       message: "Message",
       send: "Send",
     },
@@ -339,13 +335,11 @@ const es: Dictionary = {
     button: "Agendar reunión",
     form: {
       name: "Nombre",
-      company: "Empresa",
       country: "País",
       clientType: "Tipo de cliente",
       clientTypeOptions: ["Distribuidor", "Constructora", "Promotora", "Arquitecto"],
       projectType: "Tipo de proyecto",
       projectTypeOptions: ["Residencial", "Hotelero", "Comercial"],
-      volume: "Volumen estimado (m²)",
       message: "Mensaje",
       send: "Enviar",
     },
@@ -483,13 +477,11 @@ const it: Dictionary = {
     button: "Prenota un incontro",
     form: {
       name: "Nome",
-      company: "Azienda",
       country: "Paese",
       clientType: "Tipo di cliente",
       clientTypeOptions: ["Distributore", "Impresa", "Sviluppatore", "Architetto"],
       projectType: "Tipo di progetto",
       projectTypeOptions: ["Residenziale", "Alberghiero", "Commerciale"],
-      volume: "Volume stimato (m²)",
       message: "Messaggio",
       send: "Invia",
     },
