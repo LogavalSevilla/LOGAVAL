@@ -15,7 +15,7 @@ const it: LegalContent = {
             type: "list",
             items: [
               "Azienda: Logaval Export Trading, SLU",
-              "P. IVA/Codice Fiscale (CIF/NIF): B98565955",
+              "P. IVA/Codice Fiscale (CIF/NIF): ESB98565955",
               "Indirizzo: Calle Perú, 23, 41012 Siviglia (Spagna)",
               "Email: carlos@logaval.es",
               "Telefono: +34 699 094 559",
@@ -126,7 +126,7 @@ const it: LegalContent = {
             type: "list",
             items: [
               "Azienda: Logaval Export Trading, SLU",
-              "P. IVA/Codice Fiscale (CIF/NIF): B98565955",
+              "P. IVA/Codice Fiscale (CIF/NIF): ESB98565955",
               "Indirizzo: Calle Perú 23, 41012, Siviglia (Spagna)",
               "Email: carlos@logaval.es",
               "Telefono: +34 699 094 559",

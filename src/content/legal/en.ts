@@ -15,7 +15,7 @@ const en: LegalContent = {
             type: "list",
             items: [
               "Company: Logaval Export Trading, SLU",
-              "Tax ID (CIF/NIF): B98565955",
+              "Tax ID (CIF/NIF): ESB98565955",
               "Address: Calle Perú, 23, 41012 Seville (Spain)",
               "Email: carlos@logaval.es",
               "Phone: +34 699 094 559",
@@ -126,7 +126,7 @@ const en: LegalContent = {
             type: "list",
             items: [
               "Company: Logaval Export Trading, SLU",
-              "Tax ID (CIF/NIF): B98565955",
+              "Tax ID (CIF/NIF): ESB98565955",
               "Address: Calle Perú 23, 41012, Seville (Spain)",
               "Email: carlos@logaval.es",
               "Phone: +34 699 094 559",
