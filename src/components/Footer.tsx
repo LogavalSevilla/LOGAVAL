@@ -1,6 +1,29 @@
 import Logo from "./Logo";
 import type { Dictionary, Locale } from "@/i18n/translations";
 
+function GlobeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M3 12h18M12 3c2.5 2.5 3.8 5.8 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.8-3.8-9S9.5 5.5 12 3Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
+function InstagramIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0">
+      <rect x="3.5" y="3.5" width="17" height="17" rx="5" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="4.2" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" />
+    </svg>
+  );
+}
+
 const COMPANY = {
   name: "Logaval Export Trading, SLU",
   address: "Calle Perú, 23 · 41012 Sevilla, España",
@@ -42,20 +65,21 @@ export default function Footer({
                 {COMPANY.phone}
               </a>
             </p>
-            <p>
+            <p className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
               <a
                 href={`https://${COMPANY.website}`}
-                className="hover:text-gold"
+                className="inline-flex items-center gap-1.5 hover:text-gold"
               >
+                <GlobeIcon />
                 {COMPANY.website}
               </a>
-              {" · "}
               <a
                 href="https://instagram.com/logaval_spain"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-gold"
+                className="inline-flex items-center gap-1.5 hover:text-gold"
               >
+                <InstagramIcon />
                 {COMPANY.instagram}
               </a>
             </p>
