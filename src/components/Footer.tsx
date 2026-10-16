@@ -1,5 +1,5 @@
 import Logo from "./Logo";
-import type { Dictionary } from "@/i18n/translations";
+import type { Dictionary, Locale } from "@/i18n/translations";
 
 const COMPANY = {
   name: "Logaval Export Trading, SLU",
@@ -11,7 +11,13 @@ const COMPANY = {
   instagram: "@logaval_spain",
 };
 
-export default function Footer({ dict }: { dict: Dictionary }) {
+export default function Footer({
+  dict,
+  locale,
+}: {
+  dict: Dictionary;
+  locale: Locale;
+}) {
   const { footer } = dict;
   return (
     <footer className="bg-navy text-cream">
@@ -56,13 +62,13 @@ export default function Footer({ dict }: { dict: Dictionary }) {
           </div>
 
           <div className="flex gap-6 text-sm text-cream/80">
-            <a href="#" className="hover:text-gold">
+            <a href={`/${locale}/legal-notice`} className="hover:text-gold">
               {footer.legal}
             </a>
-            <a href="#" className="hover:text-gold">
+            <a href={`/${locale}/privacy-policy`} className="hover:text-gold">
               {footer.privacy}
             </a>
-            <a href="#" className="hover:text-gold">
+            <a href={`/${locale}/cookie-policy`} className="hover:text-gold">
               {footer.cookies}
             </a>
           </div>

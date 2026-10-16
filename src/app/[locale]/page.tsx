@@ -31,7 +31,7 @@ export default async function LocalePage({
         <Markets dict={dict} />
         <ContactCta dict={dict} />
       </main>
-      <Footer dict={dict} />
+      <Footer dict={dict} locale={locale as Locale} />
     </>
   );
 }
