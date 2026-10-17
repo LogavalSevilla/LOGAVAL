@@ -9,6 +9,10 @@ export async function proxy(request: NextRequest) {
     return;
   }
 
+  if (pathname === "/catalogos" || pathname.startsWith("/catalogos/")) {
+    return;
+  }
+
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     const secret = process.env.ADMIN_SESSION_SECRET;
     const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;

@@ -50,6 +50,10 @@ export function ensureSchema(): Promise<void> {
         size DOUBLE PRECISION,
         fecha TEXT
       )`,
+      sql`CREATE TABLE IF NOT EXISTS marcas (
+        nombre TEXT PRIMARY KEY,
+        logo_url TEXT
+      )`,
     ]).then(() => undefined);
   }
   return ready;

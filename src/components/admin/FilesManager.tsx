@@ -47,8 +47,10 @@ function formatDate(iso: string): string {
 
 export default function FilesManager() {
   const [docs, setDocs] = useState<Documento[]>([]);
+  const [logos, setLogos] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadingLogoFor, setUploadingLogoFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [marca, setMarca] = useState("");
@@ -56,10 +58,20 @@ export default function FilesManager() {
 
   const loadDocs = useCallback(async () => {
     try {
-      const res = await fetch("/admin/api/documentos");
-      if (!res.ok) throw new Error("No se pudo cargar la lista");
-      const data = await res.json();
-      setDocs(data);
+      const [docsRes, marcasRes] = await Promise.all([
+        fetch("/admin/api/documentos"),
+        fetch("/admin/api/marcas"),
+      ]);
+      if (!docsRes.ok || !marcasRes.ok) throw new Error("No se pudo cargar la lista");
+      const docsData = await docsRes.json();
+      const marcasData: { nombre: string; logo_url: string | null }[] =
+        await marcasRes.json();
+      setDocs(docsData);
+      setLogos(
+        Object.fromEntries(
+          marcasData.filter((m) => m.logo_url).map((m) => [m.nombre, m.logo_url as string])
+        )
+      );
     } catch {
       setError("No se pudo cargar la lista de documentos.");
     } finally {
@@ -152,6 +164,43 @@ export default function FilesManager() {
     }
   }
 
+  async function handleLogoChange(
+    marcaNombre: string,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError(null);
+
+    if (!file.type.startsWith("image/")) {
+      setError("El logo debe ser una imagen.");
+      e.target.value = "";
+      return;
+    }
+
+    setUploadingLogoFor(marcaNombre);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const pathname = `logos/${slugify(marcaNombre)}-${Date.now()}.${ext}`;
+      const blob = await upload(pathname, file, {
+        access: "public",
+        handleUploadUrl: "/admin/api/blob/upload",
+      });
+      const res = await fetch("/admin/api/marcas", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: marcaNombre, logoUrl: blob.url }),
+      });
+      if (!res.ok) throw new Error("No se pudo guardar el logo");
+      setLogos((prev) => ({ ...prev, [marcaNombre]: blob.url }));
+    } catch {
+      setError("No se pudo subir el logo.");
+    } finally {
+      setUploadingLogoFor(null);
+      e.target.value = "";
+    }
+  }
+
   async function handleCopy(url: string) {
     try {
       await navigator.clipboard.writeText(url);
@@ -203,6 +252,17 @@ export default function FilesManager() {
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
       </div>
 
+      {grupos.length > 0 && (
+        <a
+          href="/catalogos"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block text-sm text-navy underline hover:text-gold"
+        >
+          Ver catálogo público →
+        </a>
+      )}
+
       <div className="space-y-6">
         {loading ? (
           <p className="text-sm text-navy/60">Cargando...</p>
@@ -214,10 +274,36 @@ export default function FilesManager() {
               key={nombreMarca}
               className="rounded-sm border border-navy/15 bg-white"
             >
-              <div className="border-b border-navy/10 px-6 py-4">
+              <div className="flex items-center gap-4 border-b border-navy/10 px-6 py-4">
+                {logos[nombreMarca] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={logos[nombreMarca]}
+                    alt={nombreMarca}
+                    className="h-9 w-9 shrink-0 rounded-sm object-contain"
+                  />
+                ) : (
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy/10 text-xs font-semibold text-navy">
+                    {nombreMarca.slice(0, 2).toUpperCase()}
+                  </span>
+                )}
                 <h2 className="text-sm font-semibold text-navy">
                   {nombreMarca}
                 </h2>
+                <label className="ml-auto cursor-pointer text-xs text-navy/50 underline hover:text-gold">
+                  {uploadingLogoFor === nombreMarca
+                    ? "Subiendo logo..."
+                    : logos[nombreMarca]
+                      ? "Cambiar logo"
+                      : "Subir logo"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingLogoFor === nombreMarca}
+                    onChange={(e) => handleLogoChange(nombreMarca, e)}
+                  />
+                </label>
               </div>
               <ul className="divide-y divide-navy/10">
                 {items.map((doc) => (
