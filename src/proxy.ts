@@ -14,6 +14,12 @@ export async function proxy(request: NextRequest) {
     const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
     const valid = secret ? await verifySessionToken(token, secret) : false;
     if (!valid) {
+      if (pathname.startsWith("/admin/api/")) {
+        return NextResponse.json(
+          { error: "Sesión caducada. Vuelve a iniciar sesión." },
+          { status: 401 }
+        );
+      }
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
       return NextResponse.redirect(url);
