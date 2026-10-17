@@ -26,12 +26,14 @@ export default function AdminFilesPage() {
               directamente en cualquier navegador, sin apps ni registro.
             </p>
           </div>
-          <Link
-            href="/admin/logout"
-            className="shrink-0 text-xs text-navy/50 underline hover:text-gold"
-          >
-            Cerrar sesión
-          </Link>
+          <form action="/admin/logout" method="POST" className="shrink-0">
+            <button
+              type="submit"
+              className="text-xs text-navy/50 underline hover:text-gold"
+            >
+              Cerrar sesión
+            </button>
+          </form>
         </div>
         <FilesManager />
       </div>

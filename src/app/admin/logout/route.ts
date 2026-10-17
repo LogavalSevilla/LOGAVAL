@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { ADMIN_COOKIE_NAME } from "@/lib/adminAuth";
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   const url = new URL("/admin/login", request.url);
-  const response = NextResponse.redirect(url);
+  const response = NextResponse.redirect(url, { status: 303 });
   response.cookies.set(ADMIN_COOKIE_NAME, "", { maxAge: 0, path: "/" });
   return response;
 }
