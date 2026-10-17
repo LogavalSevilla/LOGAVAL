@@ -41,31 +41,25 @@ export default function Footer({
   dict: Dictionary;
   locale: Locale;
 }) {
-  const { footer } = dict;
+  const { footer, nav, about } = dict;
+  const companyLinks = [
+    { href: "#about", label: nav.about },
+    { href: "#services", label: nav.services },
+    { href: "#manufacturers", label: nav.manufacturers },
+    { href: "#products", label: nav.products },
+    { href: "#markets", label: nav.markets },
+  ];
+
   return (
     <footer className="bg-navy text-cream">
-      <div className="mx-auto max-w-7xl px-6 pt-10 pb-16 lg:px-10 lg:pt-14 lg:pb-16">
-        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
-          <Logo variant="dark" />
-
-          <div className="space-y-1.5 text-sm text-cream/80">
-            <p>{COMPANY.name}</p>
-            <p>{COMPANY.address}</p>
-            <p>
-              <a href={`mailto:${COMPANY.email}`} className="hover:text-gold">
-                {COMPANY.email}
-              </a>
-              {" · "}
-              <a
-                href={`https://wa.me/${COMPANY.whatsapp}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-gold"
-              >
-                {COMPANY.phone}
-              </a>
+      <div className="mx-auto max-w-7xl px-6 pt-14 pb-10 lg:px-10 lg:pt-16">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <Logo variant="dark" />
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-cream/70">
+              {footer.tagline}
             </p>
-            <p className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+            <div className="mt-4 flex items-center gap-4 text-sm text-cream/80">
               <a
                 href={`https://${COMPANY.website}`}
                 className="inline-flex items-center gap-1.5 hover:text-gold"
@@ -82,10 +76,64 @@ export default function Footer({
                 <InstagramIcon />
                 {COMPANY.instagram}
               </a>
-            </p>
+            </div>
           </div>
 
-          <div className="flex gap-6 text-sm text-cream/80">
+          <div>
+            <p className="text-xs font-semibold tracking-[0.25em] text-gold">
+              {footer.companyHeading.toUpperCase()}
+            </p>
+            <ul className="mt-4 space-y-2 text-sm text-cream/80">
+              {companyLinks.map((item) => (
+                <li key={item.href}>
+                  <a href={item.href} className="hover:text-gold">
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold tracking-[0.25em] text-gold">
+              {footer.contactHeading.toUpperCase()}
+            </p>
+            <ul className="mt-4 space-y-2 text-sm text-cream/80">
+              <li>{COMPANY.name}</li>
+              <li>{COMPANY.address}</li>
+              <li>
+                <a href={`mailto:${COMPANY.email}`} className="hover:text-gold">
+                  {COMPANY.email}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`https://wa.me/${COMPANY.whatsapp}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-gold"
+                >
+                  {COMPANY.phone}
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold tracking-[0.25em] text-gold">
+              {footer.coverageHeading.toUpperCase()}
+            </p>
+            <ul className="mt-4 space-y-2 text-sm text-cream/80">
+              {about.countries.map((country) => (
+                <li key={country}>{country}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-12 flex flex-col gap-4 border-t border-cream/15 pt-6 text-xs text-cream/60 sm:flex-row sm:items-center sm:justify-between">
+          <p>{footer.copyright}</p>
+          <div className="flex gap-6">
             <a href={`/${locale}/legal-notice`} className="hover:text-gold">
               {footer.legal}
             </a>
@@ -96,10 +144,6 @@ export default function Footer({
               {footer.cookies}
             </a>
           </div>
-        </div>
-
-        <div className="mt-10 border-t border-cream/15 pt-6 text-xs text-cream/60">
-          <p>{footer.copyright}</p>
         </div>
       </div>
     </footer>

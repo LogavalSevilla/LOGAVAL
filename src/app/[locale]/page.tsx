@@ -10,6 +10,8 @@ import Markets from "@/components/Markets";
 import ContactCta from "@/components/ContactCta";
 import Footer from "@/components/Footer";
 
+export const revalidate = 3600;
+
 export default async function LocalePage({
   params,
 }: {

@@ -49,6 +49,7 @@ export type Dictionary = {
     title: string;
     body: string;
     button: string;
+    channels: { email: string; whatsapp: string; call: string };
     form: {
       name: string;
       country: string;
@@ -61,6 +62,10 @@ export type Dictionary = {
     };
   };
   footer: {
+    tagline: string;
+    companyHeading: string;
+    contactHeading: string;
+    coverageHeading: string;
     legal: string;
     privacy: string;
     cookies: string;
@@ -191,6 +196,7 @@ const en: Dictionary = {
     title: "Working on a project or looking for new product lines?",
     body: "Tell us what you need and we will propose the right manufacturers and products.",
     button: "Book a meeting",
+    channels: { email: "Email", whatsapp: "WhatsApp", call: "Call us" },
     form: {
       name: "Name",
       country: "Country",
@@ -203,6 +209,11 @@ const en: Dictionary = {
     },
   },
   footer: {
+    tagline:
+      "Connecting Europe's ceramic manufacturers with distributors and contract projects across the GCC.",
+    companyHeading: "Company",
+    contactHeading: "Contact",
+    coverageHeading: "Coverage",
     legal: "Legal notice",
     privacy: "Privacy policy",
     cookies: "Cookie policy",
@@ -333,6 +344,7 @@ const es: Dictionary = {
     title: "¿Tienes un proyecto o buscas nuevas líneas de producto?",
     body: "Cuéntanos qué necesitas y te propondremos los fabricantes y productos adecuados.",
     button: "Agendar reunión",
+    channels: { email: "Email", whatsapp: "WhatsApp", call: "Llamar" },
     form: {
       name: "Nombre",
       country: "País",
@@ -345,6 +357,11 @@ const es: Dictionary = {
     },
   },
   footer: {
+    tagline:
+      "Conectamos a fabricantes europeos de cerámica con distribuidores y proyectos contract del Golfo.",
+    companyHeading: "Empresa",
+    contactHeading: "Contacto",
+    coverageHeading: "Cobertura",
     legal: "Aviso legal",
     privacy: "Política de privacidad",
     cookies: "Política de cookies",
@@ -475,6 +492,7 @@ const it: Dictionary = {
     title: "Hai un progetto o cerchi nuove linee di prodotto?",
     body: "Raccontaci di cosa hai bisogno e ti proporremo i produttori e i prodotti più adatti.",
     button: "Prenota un incontro",
+    channels: { email: "Email", whatsapp: "WhatsApp", call: "Chiamaci" },
     form: {
       name: "Nome",
       country: "Paese",
@@ -487,6 +505,11 @@ const it: Dictionary = {
     },
   },
   footer: {
+    tagline:
+      "Colleghiamo i produttori europei di ceramica con distributori e progetti contract nei paesi del Golfo.",
+    companyHeading: "Azienda",
+    contactHeading: "Contatto",
+    coverageHeading: "Copertura",
     legal: "Note legali",
     privacy: "Informativa sulla privacy",
     cookies: "Cookie policy",

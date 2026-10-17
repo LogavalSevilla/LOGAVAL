@@ -5,6 +5,46 @@ import type { Dictionary } from "@/i18n/translations";
 
 const EMAIL = "carlos@logaval.es";
 const WHATSAPP = "34699094559";
+const PHONE = "+34699094559";
+
+function MailIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0">
+      <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="m4 7 8 6 8-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function WhatsAppIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0">
+      <path
+        d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8.5 9.3c.3-.7 1-1.5 1.6-1.5.3 0 .6.1.9.8.3.6.8 1.9.8 2 .1.2.1.4 0 .6-.1.2-.2.3-.4.5-.2.2-.4.4-.2.8.3.5 1.2 1.7 2.5 2.3.5.2.7.2.9 0 .2-.2.6-.7.8-.9.2-.2.4-.2.6-.1.3.1 1.6.8 1.9 1 .3.1.5.2.5.4 0 .2 0 1-.5 1.5-.5.6-1.6.9-2.3.9-1.5 0-3.4-.9-4.7-2.1-1.6-1.4-2.6-3.1-2.8-4.5-.1-.7.1-1.4.4-1.7Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function PhoneIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0">
+      <path
+        d="M6.6 4h3l1.4 4-2 1.5a12 12 0 0 0 5.5 5.5l1.5-2 4 1.4v3a2 2 0 0 1-2.1 2A17 17 0 0 1 4.6 6.1 2 2 0 0 1 6.6 4Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export default function ContactCta({ dict }: { dict: Dictionary }) {
   const { cta } = dict;
@@ -36,7 +76,33 @@ export default function ContactCta({ dict }: { dict: Dictionary }) {
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-cream/80">{cta.body}</p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+        <div className="mt-6 flex flex-wrap gap-3">
+          <a
+            href={`mailto:${EMAIL}`}
+            className="inline-flex items-center gap-2 rounded-sm border border-cream/25 px-4 py-2 text-sm text-cream transition-colors hover:border-gold hover:text-gold"
+          >
+            <MailIcon />
+            {cta.channels.email}
+          </a>
+          <a
+            href={`https://wa.me/${WHATSAPP}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-sm border border-cream/25 px-4 py-2 text-sm text-cream transition-colors hover:border-gold hover:text-gold"
+          >
+            <WhatsAppIcon />
+            {cta.channels.whatsapp}
+          </a>
+          <a
+            href={`tel:${PHONE}`}
+            className="inline-flex items-center gap-2 rounded-sm border border-cream/25 px-4 py-2 text-sm text-cream transition-colors hover:border-gold hover:text-gold"
+          >
+            <PhoneIcon />
+            {cta.channels.call}
+          </a>
+        </div>
+
+        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <div className="grid gap-5 sm:grid-cols-2">
             <input
               name="name"
@@ -92,22 +158,12 @@ export default function ContactCta({ dict }: { dict: Dictionary }) {
             className={`${inputClasses} resize-none`}
           />
 
-          <div className="flex flex-wrap items-center gap-5">
-            <button
-              type="submit"
-              className="rounded-sm bg-gold px-6 py-2.5 text-sm font-semibold tracking-wide text-navy transition-colors hover:bg-cream"
-            >
-              {cta.button}
-            </button>
-            <a
-              href={`https://wa.me/${WHATSAPP}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-cream/80 underline-offset-4 hover:text-gold hover:underline"
-            >
-              WhatsApp
-            </a>
-          </div>
+          <button
+            type="submit"
+            className="rounded-sm bg-gold px-6 py-2.5 text-sm font-semibold tracking-wide text-navy transition-colors hover:bg-cream"
+          >
+            {cta.button}
+          </button>
         </form>
       </div>
     </section>
