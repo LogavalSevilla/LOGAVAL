@@ -69,8 +69,9 @@ export default function FilesManager() {
         handleUploadUrl: "/admin/api/blob/upload",
       });
       await loadFiles();
-    } catch {
-      setError("Error al subir el archivo. Inténtalo de nuevo.");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      setError(`Error al subir el archivo: ${detail}`);
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
