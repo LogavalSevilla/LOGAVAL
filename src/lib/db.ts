@@ -2,8 +2,13 @@ import { neon } from "@neondatabase/serverless";
 
 export const sql = neon(process.env.DATABASE_URL!);
 
-export type Collection = "ingresos" | "gastos" | "reglas";
-export const COLLECTIONS: Collection[] = ["ingresos", "gastos", "reglas"];
+export type Collection = "ingresos" | "gastos" | "reglas" | "documentos";
+export const COLLECTIONS: Collection[] = [
+  "ingresos",
+  "gastos",
+  "reglas",
+  "documentos",
+];
 
 export function isCollection(x: string): x is Collection {
   return (COLLECTIONS as string[]).includes(x);
@@ -36,6 +41,14 @@ export function ensureSchema(): Promise<void> {
         prefijo TEXT,
         empresa TEXT,
         tipo TEXT
+      )`,
+      sql`CREATE TABLE IF NOT EXISTS documentos (
+        id TEXT PRIMARY KEY,
+        marca TEXT,
+        nombre TEXT,
+        url TEXT,
+        size DOUBLE PRECISION,
+        fecha TEXT
       )`,
     ]).then(() => undefined);
   }

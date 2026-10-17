@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { del } from "@vercel/blob";
 import { sql, ensureSchema, isCollection } from "@/lib/db";
 
 export async function PUT(
@@ -39,6 +40,19 @@ export async function PUT(
         num = EXCLUDED.num, fecha = EXCLUDED.fecha, empresa = EXCLUDED.empresa,
         categoria = EXCLUDED.categoria, base = EXCLUDED.base, iva = EXCLUDED.iva
     `;
+  } else if (collection === "documentos") {
+    const marca = String(body.marca ?? "");
+    const nombre = String(body.nombre ?? "");
+    const url = String(body.url ?? "");
+    const size = Number(body.size) || 0;
+    const fecha = String(body.fecha ?? "");
+    await sql`
+      INSERT INTO documentos (id, marca, nombre, url, size, fecha)
+      VALUES (${id}, ${marca}, ${nombre}, ${url}, ${size}, ${fecha})
+      ON CONFLICT (id) DO UPDATE SET
+        marca = EXCLUDED.marca, nombre = EXCLUDED.nombre, url = EXCLUDED.url,
+        size = EXCLUDED.size, fecha = EXCLUDED.fecha
+    `;
   } else {
     const prefijo = String(body.prefijo ?? "");
     const empresa = String(body.empresa ?? "");
@@ -68,6 +82,17 @@ export async function DELETE(
     await sql`DELETE FROM ingresos WHERE id = ${id}`;
   } else if (collection === "gastos") {
     await sql`DELETE FROM gastos WHERE id = ${id}`;
+  } else if (collection === "documentos") {
+    const rows = await sql`SELECT url FROM documentos WHERE id = ${id}`;
+    const url = rows[0]?.url as string | undefined;
+    await sql`DELETE FROM documentos WHERE id = ${id}`;
+    if (url) {
+      try {
+        await del(url);
+      } catch {
+        // blob already gone or URL invalid; DB row is removed regardless
+      }
+    }
   } else {
     await sql`DELETE FROM reglas WHERE id = ${id}`;
   }

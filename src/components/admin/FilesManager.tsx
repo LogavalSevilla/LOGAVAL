@@ -1,14 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
 
-type BlobFile = {
+type Documento = {
+  id: string;
+  marca: string;
+  nombre: string;
   url: string;
-  pathname: string;
   size: number;
-  uploadedAt: string;
+  fecha: string;
 };
+
+function genId(): string {
+  return "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
+function slugify(text: string): string {
+  return (
+    text
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "otros"
+  );
+}
 
 function formatSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
@@ -16,7 +34,9 @@ function formatSize(bytes: number): string {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("es-ES", {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("es-ES", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -26,19 +46,20 @@ function formatDate(iso: string): string {
 }
 
 export default function FilesManager() {
-  const [files, setFiles] = useState<BlobFile[]>([]);
+  const [docs, setDocs] = useState<Documento[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [marca, setMarca] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const loadFiles = useCallback(async () => {
+  const loadDocs = useCallback(async () => {
     try {
-      const res = await fetch("/admin/api/blob/list");
+      const res = await fetch("/admin/api/documentos");
       if (!res.ok) throw new Error("No se pudo cargar la lista");
       const data = await res.json();
-      setFiles(data);
+      setDocs(data);
     } catch {
       setError("No se pudo cargar la lista de documentos.");
     } finally {
@@ -48,8 +69,23 @@ export default function FilesManager() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch, setState happens post-await
-    loadFiles();
-  }, [loadFiles]);
+    loadDocs();
+  }, [loadDocs]);
+
+  const marcasConocidas = useMemo(() => {
+    const set = new Set(docs.map((d) => d.marca).filter(Boolean));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [docs]);
+
+  const grupos = useMemo(() => {
+    const map = new Map<string, Documento[]>();
+    for (const d of docs) {
+      const key = d.marca || "Sin marca";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(d);
+    }
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [docs]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -62,13 +98,36 @@ export default function FilesManager() {
       return;
     }
 
+    const marcaLimpia = marca.trim();
+    if (!marcaLimpia) {
+      setError("Indica la marca antes de subir el archivo.");
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+
     setUploading(true);
     try {
-      await upload(file.name, file, {
+      const pathname = `${slugify(marcaLimpia)}/${Date.now()}-${file.name}`;
+      const blob = await upload(pathname, file, {
         access: "public",
         handleUploadUrl: "/admin/api/blob/upload",
       });
-      await loadFiles();
+
+      const id = genId();
+      const res = await fetch(`/admin/api/documentos/${encodeURIComponent(id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          marca: marcaLimpia,
+          nombre: file.name,
+          url: blob.url,
+          size: file.size,
+          fecha: new Date().toISOString(),
+        }),
+      });
+      if (!res.ok) throw new Error("No se pudo guardar el documento");
+
+      await loadDocs();
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
       setError(`Error al subir el archivo: ${detail}`);
@@ -78,18 +137,16 @@ export default function FilesManager() {
     }
   }
 
-  async function handleDelete(url: string) {
+  async function handleDelete(id: string) {
     if (!confirm("¿Eliminar este documento? El enlace dejará de funcionar.")) {
       return;
     }
     try {
-      const res = await fetch("/admin/api/blob/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+      const res = await fetch(`/admin/api/documentos/${encodeURIComponent(id)}`, {
+        method: "DELETE",
       });
       if (!res.ok) throw new Error();
-      setFiles((prev) => prev.filter((f) => f.url !== url));
+      setDocs((prev) => prev.filter((d) => d.id !== id));
     } catch {
       setError("No se pudo eliminar el documento.");
     }
@@ -108,6 +165,25 @@ export default function FilesManager() {
   return (
     <div className="space-y-8">
       <div className="rounded-sm border border-navy/15 bg-white p-6">
+        <div className="mb-4">
+          <label className="mb-1 block text-sm font-semibold text-navy">
+            Marca
+          </label>
+          <input
+            type="text"
+            list="marcas-conocidas"
+            value={marca}
+            onChange={(e) => setMarca(e.target.value)}
+            placeholder="Ej. Alumacer"
+            className="w-full max-w-sm border-b border-navy/30 bg-transparent py-1.5 text-navy placeholder:text-navy/40 focus:border-gold focus:outline-none"
+          />
+          <datalist id="marcas-conocidas">
+            {marcasConocidas.map((m) => (
+              <option key={m} value={m} />
+            ))}
+          </datalist>
+        </div>
+
         <label className="flex cursor-pointer flex-col items-start gap-3">
           <span className="text-sm font-semibold text-navy">
             Subir documento PDF
@@ -127,60 +203,65 @@ export default function FilesManager() {
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
       </div>
 
-      <div className="rounded-sm border border-navy/15 bg-white">
-        <div className="border-b border-navy/10 px-6 py-4">
-          <h2 className="text-sm font-semibold text-navy">
-            Documentos subidos
-          </h2>
-        </div>
+      <div className="space-y-6">
         {loading ? (
-          <p className="px-6 py-6 text-sm text-navy/60">Cargando...</p>
-        ) : files.length === 0 ? (
-          <p className="px-6 py-6 text-sm text-navy/60">
-            No hay documentos todavía.
-          </p>
+          <p className="text-sm text-navy/60">Cargando...</p>
+        ) : grupos.length === 0 ? (
+          <p className="text-sm text-navy/60">No hay documentos todavía.</p>
         ) : (
-          <ul className="divide-y divide-navy/10">
-            {files.map((file) => (
-              <li
-                key={file.url}
-                className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-navy">
-                    {file.pathname}
-                  </p>
-                  <p className="text-xs text-navy/50">
-                    {formatSize(file.size)} · {formatDate(file.uploadedAt)}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-3 text-sm">
-                  <a
-                    href={file.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-navy underline hover:text-gold"
+          grupos.map(([nombreMarca, items]) => (
+            <div
+              key={nombreMarca}
+              className="rounded-sm border border-navy/15 bg-white"
+            >
+              <div className="border-b border-navy/10 px-6 py-4">
+                <h2 className="text-sm font-semibold text-navy">
+                  {nombreMarca}
+                </h2>
+              </div>
+              <ul className="divide-y divide-navy/10">
+                {items.map((doc) => (
+                  <li
+                    key={doc.id}
+                    className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    Abrir
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(file.url)}
-                    className="rounded-sm border border-navy/20 px-3 py-1 text-navy transition-colors hover:border-gold hover:text-gold"
-                  >
-                    {copiedUrl === file.url ? "Copiado" : "Copiar enlace"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(file.url)}
-                    className="rounded-sm border border-red-200 px-3 py-1 text-red-600 transition-colors hover:border-red-400"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-navy">
+                        {doc.nombre}
+                      </p>
+                      <p className="text-xs text-navy/50">
+                        {formatSize(doc.size)} · {formatDate(doc.fecha)}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3 text-sm">
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-navy underline hover:text-gold"
+                      >
+                        Abrir
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(doc.url)}
+                        className="rounded-sm border border-navy/20 px-3 py-1 text-navy transition-colors hover:border-gold hover:text-gold"
+                      >
+                        {copiedUrl === doc.url ? "Copiado" : "Copiar enlace"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(doc.id)}
+                        className="rounded-sm border border-red-200 px-3 py-1 text-red-600 transition-colors hover:border-red-400"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
         )}
       </div>
     </div>
