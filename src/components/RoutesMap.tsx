@@ -25,7 +25,12 @@ const ROUTE: Coords[] = [
   [47, 12.5],
   [52, 14.5],
   [54.09, 17.02], // Salalah
-  [56, 21],
+  [55.7, 17.9],
+  [57.4, 19.2],
+  [58.9, 20.5], // off Masirah Island
+  [59.8, 22.4], // Ras al Hadd (easternmost point, rounding the corner)
+  [58.6, 23.5], // off Muscat
+  [57.4, 24.1],
   [56.71, 24.35], // Sohar
   [56.3, 26.6], // Strait of Hormuz
   [55.27, 25.2], // Dubai
