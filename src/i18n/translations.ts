@@ -103,7 +103,7 @@ const en: Dictionary = {
       { value: "20", label: "years of experience" },
       { value: "6", label: "GCC countries" },
       { value: "15", label: "manufacturers" },
-      { value: "3", label: "partner cities" },
+      { value: "3", label: "contract partners" },
     ],
     countries: [
       "Saudi Arabia",
@@ -252,7 +252,7 @@ const es: Dictionary = {
       { value: "20", label: "años de experiencia" },
       { value: "6", label: "países del GCC" },
       { value: "15", label: "fabricantes" },
-      { value: "3", label: "ciudades con colaboradores" },
+      { value: "3", label: "colaboradores contract" },
     ],
     countries: [
       "Arabia Saudí",
@@ -401,7 +401,7 @@ const it: Dictionary = {
       { value: "20", label: "anni di esperienza" },
       { value: "6", label: "paesi del GCC" },
       { value: "15", label: "produttori" },
-      { value: "3", label: "città con partner" },
+      { value: "3", label: "partner contract" },
     ],
     countries: [
       "Arabia Saudita",
