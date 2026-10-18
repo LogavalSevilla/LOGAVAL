@@ -27,7 +27,7 @@ export default async function CatalogosPage() {
   await ensureSchema();
   const [marcasRows, docsRows] = await Promise.all([
     sql`SELECT nombre, logo_url FROM marcas`,
-    sql`SELECT id, marca, nombre, url, size, fecha FROM documentos ORDER BY marca ASC, fecha DESC`,
+    sql`SELECT id, marca, nombre, url, size, fecha FROM documentos ORDER BY marca ASC, nombre ASC`,
   ]);
   const marcas = marcasRows as unknown as Marca[];
   const docs = docsRows as unknown as Documento[];
