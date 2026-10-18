@@ -59,6 +59,7 @@ export type Dictionary = {
       projectTypeOptions: string[];
       message: string;
       send: string;
+      other: string;
     };
   };
   footer: {
@@ -206,6 +207,7 @@ const en: Dictionary = {
       projectTypeOptions: ["Residential", "Hospitality", "Commercial"],
       message: "Message",
       send: "Send",
+      other: "Other",
     },
   },
   footer: {
@@ -354,6 +356,7 @@ const es: Dictionary = {
       projectTypeOptions: ["Residencial", "Hotelero", "Comercial"],
       message: "Mensaje",
       send: "Enviar",
+      other: "Otro",
     },
   },
   footer: {
@@ -502,6 +505,7 @@ const it: Dictionary = {
       projectTypeOptions: ["Residenziale", "Alberghiero", "Commerciale"],
       message: "Messaggio",
       send: "Invia",
+      other: "Altro",
     },
   },
   footer: {

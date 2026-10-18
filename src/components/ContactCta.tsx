@@ -47,7 +47,10 @@ function PhoneIcon() {
 }
 
 export default function ContactCta({ dict }: { dict: Dictionary }) {
-  const { cta } = dict;
+  const { cta, about } = dict;
+  const countryOptions = [...about.countries, cta.form.other];
+  const clientTypeOptions = [...cta.form.clientTypeOptions, cta.form.other];
+  const projectTypeOptions = [...cta.form.projectTypeOptions, cta.form.other];
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -110,12 +113,21 @@ export default function ContactCta({ dict }: { dict: Dictionary }) {
               required
               className={inputClasses}
             />
-            <input
+            <select
               name="country"
-              placeholder={cta.form.country}
               required
+              defaultValue=""
               className={inputClasses}
-            />
+            >
+              <option value="" disabled>
+                {cta.form.country}
+              </option>
+              {countryOptions.map((option) => (
+                <option key={option} value={option} className="text-navy">
+                  {option}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
@@ -128,7 +140,7 @@ export default function ContactCta({ dict }: { dict: Dictionary }) {
               <option value="" disabled>
                 {cta.form.clientType}
               </option>
-              {cta.form.clientTypeOptions.map((option) => (
+              {clientTypeOptions.map((option) => (
                 <option key={option} value={option} className="text-navy">
                   {option}
                 </option>
@@ -143,7 +155,7 @@ export default function ContactCta({ dict }: { dict: Dictionary }) {
               <option value="" disabled>
                 {cta.form.projectType}
               </option>
-              {cta.form.projectTypeOptions.map((option) => (
+              {projectTypeOptions.map((option) => (
                 <option key={option} value={option} className="text-navy">
                   {option}
                 </option>
