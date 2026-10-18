@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { locales, type Dictionary, type Locale } from "@/i18n/translations";
+import MobileMenu from "./MobileMenu";
 
 const LOCALE_LABELS: Record<Locale, string> = { en: "EN", es: "ES", it: "IT" };
 
@@ -46,7 +47,7 @@ export default function Header({
         </nav>
 
         <div className="flex items-center gap-4">
-          <div className="hidden items-center gap-1.5 text-xs font-semibold tracking-wide text-navy/70 sm:flex">
+          <div className="hidden items-center gap-1.5 text-xs font-semibold tracking-wide text-navy/70 lg:flex">
             {locales.map((loc, i) => (
               <span key={loc} className="flex items-center gap-1.5">
                 <Link
@@ -61,10 +62,17 @@ export default function Header({
           </div>
           <a
             href="#contact"
-            className="hidden rounded-sm bg-navy px-5 py-2.5 text-sm font-semibold tracking-wide text-cream transition-colors hover:bg-gold md:inline-block"
+            className="hidden rounded-sm bg-navy px-5 py-2.5 text-sm font-semibold tracking-wide text-cream transition-colors hover:bg-gold lg:inline-block"
           >
             {dict.nav.contact}
           </a>
+          <MobileMenu
+            navItems={navItems}
+            contactLabel={dict.nav.contact}
+            locales={locales}
+            localeLabels={LOCALE_LABELS}
+            currentLocale={locale}
+          />
         </div>
       </div>
     </header>
