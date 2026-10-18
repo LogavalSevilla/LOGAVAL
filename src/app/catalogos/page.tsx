@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { sql, ensureSchema } from "@/lib/db";
 
 export const metadata: Metadata = {
-  title: "Catálogos | LOGAVAL",
+  title: "Catalogs | LOGAVAL",
   robots: { index: false, follow: false },
 };
 
@@ -35,7 +35,7 @@ export default async function CatalogosPage() {
   const logoByMarca = new Map(marcas.map((m) => [m.nombre, m.logo_url]));
   const grouped = new Map<string, Documento[]>();
   for (const d of docs) {
-    const key = d.marca || "Otros";
+    const key = d.marca || "Other";
     if (!grouped.has(key)) grouped.set(key, []);
     grouped.get(key)!.push(d);
   }
@@ -46,14 +46,14 @@ export default async function CatalogosPage() {
   return (
     <main className="min-h-screen bg-cream px-6 py-12">
       <div className="mx-auto max-w-3xl">
-        <h1 className="font-serif text-3xl text-navy">Catálogos</h1>
+        <h1 className="font-serif text-3xl text-navy">Catalogs</h1>
         <p className="mt-2 text-navy/60">
-          Pulsa en una marca para ver sus catálogos disponibles.
+          Click on a brand to see its available catalogs.
         </p>
 
         {entries.length === 0 ? (
           <p className="mt-10 text-sm text-navy/50">
-            Todavía no hay catálogos disponibles.
+            No catalogs available yet.
           </p>
         ) : (
           <div className="mt-8 space-y-4">
@@ -104,7 +104,7 @@ export default async function CatalogosPage() {
                           rel="noopener noreferrer"
                           className="shrink-0 rounded-sm border border-navy/20 px-3 py-1 text-sm text-navy transition-colors hover:border-gold hover:text-gold"
                         >
-                          Abrir
+                          Open
                         </a>
                       </li>
                     ))}
