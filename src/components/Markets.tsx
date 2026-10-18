@@ -1,5 +1,5 @@
-import Image from "next/image";
 import type { Dictionary } from "@/i18n/translations";
+import RoutesMap from "./RoutesMap";
 
 export default function Markets({ dict }: { dict: Dictionary }) {
   const { markets, nav } = dict;
@@ -17,15 +17,7 @@ export default function Markets({ dict }: { dict: Dictionary }) {
             {markets.body}
           </p>
         </div>
-        <div className="overflow-hidden rounded-sm bg-cream/5">
-          <Image
-            src="/images/gcc-map.webp"
-            alt="GCC — Gulf Cooperation Council countries map"
-            width={1536}
-            height={1024}
-            className="h-auto w-full object-contain"
-          />
-        </div>
+        <RoutesMap />
       </div>
     </section>
   );
