@@ -26,7 +26,7 @@ export default async function LocalePage({
       <Header locale={locale as Locale} dict={dict} />
       <main className="flex-1">
         <Hero dict={dict} />
-        <About dict={dict} />
+        <About dict={dict} locale={locale as Locale} />
         <Services dict={dict} />
         <Origin dict={dict} />
         <Products dict={dict} />

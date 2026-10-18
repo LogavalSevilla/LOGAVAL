@@ -98,7 +98,7 @@ const en: Dictionary = {
   },
   about: {
     title: "20 years of experience in the Middle East ceramic market",
-    body: "Logaval Export Trading is a commercial agency based in Seville, Spain. Founded in 2010, it builds on our founder's work in the Middle East ceramic market since 2006. With partners in Dubai, Riyadh and Doha, we work on the ground with distributors, contractors and developers across the six GCC countries.",
+    body: "Logaval Export Trading is a commercial agency based in Seville, Spain. Founded in 2010, it builds on our founder's work in the Middle East ceramic market since 2006. With partners in Dubai, Riyadh and Doha, we work on the ground with distributors, contractors and developers across the six GCC countries: ",
     stats: [
       { value: "20", label: "years of experience" },
       { value: "6", label: "GCC countries" },
@@ -247,7 +247,7 @@ const es: Dictionary = {
   },
   about: {
     title: "20 años de experiencia en el mercado cerámico de Oriente Medio",
-    body: "Logaval Export Trading es una agencia comercial con sede en Sevilla, España. Fundada en 2010, nace de la experiencia de su fundador en el mercado cerámico de Oriente Medio desde 2006. Con colaboradores en Dubái, Riad y Doha, trabajamos sobre el terreno con distribuidores, constructoras y promotoras de los seis países del GCC.",
+    body: "Logaval Export Trading es una agencia comercial con sede en Sevilla, España. Fundada en 2010, nace de la experiencia de su fundador en el mercado cerámico de Oriente Medio desde 2006. Con colaboradores en Dubái, Riad y Doha, trabajamos sobre el terreno con distribuidores, constructoras y promotoras de los seis países del GCC: ",
     stats: [
       { value: "20", label: "años de experiencia" },
       { value: "6", label: "países del GCC" },
@@ -396,7 +396,7 @@ const it: Dictionary = {
   },
   about: {
     title: "20 anni di esperienza nel mercato ceramico del Medio Oriente",
-    body: "Logaval Export Trading è un'agenzia commerciale con sede a Siviglia, in Spagna. Fondata nel 2010, nasce dall'esperienza del suo fondatore nel mercato ceramico del Medio Oriente dal 2006. Con partner a Dubai, Riad e Doha, lavoriamo sul campo con distributori, imprese di costruzione e sviluppatori immobiliari nei sei paesi del GCC.",
+    body: "Logaval Export Trading è un'agenzia commerciale con sede a Siviglia, in Spagna. Fondata nel 2010, nasce dall'esperienza del suo fondatore nel mercato ceramico del Medio Oriente dal 2006. Con partner a Dubai, Riad e Doha, lavoriamo sul campo con distributori, imprese di costruzione e sviluppatori immobiliari nei sei paesi del GCC: ",
     stats: [
       { value: "20", label: "anni di esperienza" },
       { value: "6", label: "paesi del GCC" },
