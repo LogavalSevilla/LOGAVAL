@@ -376,15 +376,27 @@ var state={ingresos:SEED_INGRESOS,gastos:SEED_GASTOS,kind:"in",list:"in",editId:
     $("tbl").innerHTML=head+'<tbody>'+body+'</tbody><tfoot><tr><td colspan="'+5+'"><strong>Total</strong></td><td class="num"><strong>'+eur.format(sum(rows,"base"))+'</strong></td><td class="num"><strong>'+eur.format(sum(rows,"iva"))+'</strong></td><td class="num"><strong>'+eur.format(tot)+'</strong></td><td></td></tr></tfoot>';
     afterTable(rows);
   }
+  function topCats(rows,isIn){
+    var list;
+    if(isIn){
+      list=[["C","Comisiones",sumSub(rows,"C")],["E","Venta de material",sumSub(rows,"E")],["?","Sin clasificar",sumSub(rows,"?")]];
+    }else{
+      var map={};
+      rows.forEach(function(r){var c=r.categoria||"Otros";map[c]=(map[c]||0)+nz(r.base)});
+      list=Object.keys(map).map(function(c){return[c,c,map[c]]});
+    }
+    return list.filter(function(d){return d[2]>0}).sort(function(a,b){return b[2]-a[2]}).slice(0,3);
+  }
   function renderSubTabs(isIn){
-    var el=$("subTabs");el.hidden=!isIn;if(!isIn)return;
-    var base=state.ingresos.filter(inPeriod),defs=[["all","Todos",sum(base,"base")],["C","Comisiones (C)",sumSub(base,"C")],["E","Venta de material (E)",sumSub(base,"E")]];
-    el.innerHTML=defs.map(function(d){return'<button type="button" data-sub="'+d[0]+'" aria-pressed="'+(state.sub===d[0])+'">'+d[1]+' · '+eur0.format(d[2])+'</button>'}).join("");
+    var el=$("subTabs");el.hidden=false;
+    var base=(isIn?state.ingresos:state.gastos).filter(inPeriod);
+    var defs=[["all",(isIn?"Total Ingresos":"Total Gastos"),sum(base,"base")]].concat(topCats(base,isIn));
+    el.innerHTML=defs.map(function(d){return'<button type="button" data-sub="'+esc(d[0])+'" aria-pressed="'+(state.sub===d[0])+'">'+esc(d[1])+' · '+eur0.format(d[2])+'</button>'}).join("");
   }
   function visibleRows(){
     var isIn=state.list==="in",rows=(isIn?state.ingresos:state.gastos).filter(inPeriod),q=$("q").value.trim().toLowerCase();
     if(q)rows=rows.filter(function(r){return[r.num,r.fabricante,r.empresa,r.categoria].join(" ").toLowerCase().indexOf(q)>=0});
-    if(state.list==="in"&&state.sub!=="all")rows=rows.filter(function(r){return subOf(r.num)===state.sub});
+    if(state.sub!=="all")rows=rows.filter(function(r){return isIn?subOf(r.num)===state.sub:(r.categoria||"Otros")===state.sub});
     return rows;
   }
   function selIds(){var v={};visibleRows().forEach(function(r){v[r.id]=1});return Object.keys(state.sel).filter(function(id){return state.sel[id]&&v[id]})}
@@ -438,8 +450,8 @@ var state={ingresos:SEED_INGRESOS,gastos:SEED_GASTOS,kind:"in",list:"in",editId:
 
   /* ---------- listado ---------- */
   function syncList(){$("lstIn").setAttribute("aria-pressed",state.list==="in");$("lstOut").setAttribute("aria-pressed",state.list==="out")}
-  $("lstIn").onclick=function(){state.list="in";state.confirmId=null;state.sel={};state.bulkConfirm=false;syncList();renderTable()};
-  $("lstOut").onclick=function(){state.list="out";state.confirmId=null;state.sel={};state.bulkConfirm=false;syncList();renderTable()};
+  $("lstIn").onclick=function(){state.list="in";state.sub="all";state.confirmId=null;state.sel={};state.bulkConfirm=false;syncList();renderTable()};
+  $("lstOut").onclick=function(){state.list="out";state.sub="all";state.confirmId=null;state.sel={};state.bulkConfirm=false;syncList();renderTable()};
   $("q").oninput=renderTable;
   $("subTabs").addEventListener("click",function(e){var b=e.target.closest("button[data-sub]");if(!b)return;state.sub=b.dataset.sub;state.sel={};state.bulkConfirm=false;renderTable()});
   $("fYear").onchange=render;$("fPeriod").onchange=render;
