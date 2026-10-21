@@ -333,21 +333,28 @@ var state={ingresos:SEED_INGRESOS,gastos:SEED_GASTOS,kind:"in",list:"in",editId:
     }).join("");
   }
   function niceMax(v){if(v<=0)return 1000;var p=Math.pow(10,Math.floor(Math.log10(v))),n=v/p;return(n<=1?1:n<=2?2:n<=5?5:10)*p}
+  function periodMonths(p){
+    if(p==="all")return[0,1,2,3,4,5,6,7,8,9,10,11];
+    if(p.charAt(0)==="q"){var q=parseInt(p.charAt(1),10)-1;return[q*3,q*3+1,q*3+2]}
+    return[parseInt(p.slice(1),10)];
+  }
   function renderChart(){
-    var y=$("fYear").value,IC=Array(12).fill(0),IE=Array(12).fill(0),IO=Array(12).fill(0),G=Array(12).fill(0);
+    var y=$("fYear").value,months=periodMonths($("fPeriod").value);
+    var IC=Array(12).fill(0),IE=Array(12).fill(0),IO=Array(12).fill(0),G=Array(12).fill(0);
     state.ingresos.forEach(function(r){if((r.fecha||"").slice(0,4)===y){var k=subOf(r.num),a=k==="C"?IC:k==="E"?IE:IO;a[parseInt(r.fecha.slice(5,7),10)-1]+=nz(r.base)}});
-    var I=IC.map(function(v,i){return v+IE[i]+IO[i]});$("legO").hidden=!IO.some(function(v){return v>0});
+    var I=IC.map(function(v,i){return v+IE[i]+IO[i]});$("legO").hidden=!months.some(function(i){return IO[i]>0});
     state.gastos.forEach(function(r){if((r.fecha||"").slice(0,4)===y)G[parseInt(r.fecha.slice(5,7),10)-1]+=nz(r.base)});
-    var mx=niceMax(Math.max.apply(null,I.concat(G)));
+    var mx=niceMax(Math.max.apply(null,months.map(function(i){return Math.max(I[i],G[i])})));
     var W=640,H=240,L=54,R=8,T=10,B=26,pw=W-L-R,ph=H-T-B,s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Ingresos y gastos mensuales">';
     for(var t=0;t<=4;t++){
       var v=mx*t/4,yy=T+ph-ph*t/4;
       s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--line)" stroke-width="1"/>';
       s+='<text x="'+(L-6)+'" y="'+(yy+4)+'" text-anchor="end">'+(v>=1000?(v/1000).toLocaleString("es-ES")+" k":v)+'</text>';
     }
-    var gw=pw/12,bw=Math.min(16,gw/2-3);
-    for(var i=0;i<12;i++){
-      var cx=L+gw*i+gw/2,hi=Math.max(0,I[i])/mx*ph,hg=Math.max(0,G[i])/mx*ph;
+    var n=months.length,gw=pw/n,bw=Math.min(16,gw/2-3);
+    for(var idx=0;idx<n;idx++){
+      var i=months[idx];
+      var cx=L+gw*idx+gw/2,hi=Math.max(0,I[i])/mx*ph,hg=Math.max(0,G[i])/mx*ph;
       var yb=T+ph,segs=[[IC[i],"var(--in)","Comisiones"],[IE[i],"var(--in2)","Venta de material"],[IO[i],"var(--muted)","Sin clasificar"]];
       segs.forEach(function(sg){var h=Math.max(0,sg[0])/mx*ph;if(h<=0)return;yb-=h;s+='<rect x="'+(cx-bw-1)+'" y="'+yb+'" width="'+bw+'" height="'+h+'" fill="'+sg[1]+'"><title>'+MONTHS[i]+' · '+sg[2]+': '+eur.format(sg[0])+'</title></rect>'});
       s+='<rect x="'+(cx+1)+'" y="'+(T+ph-hg)+'" width="'+bw+'" height="'+hg+'" rx="2" fill="var(--out)"><title>'+MONTHS[i]+' gastos: '+eur.format(G[i])+'</title></rect>';
