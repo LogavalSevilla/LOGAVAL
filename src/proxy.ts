@@ -5,7 +5,11 @@ import { ADMIN_COOKIE_NAME, verifySessionToken } from "@/lib/adminAuth";
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname === "/admin/login" || pathname === "/admin/logout") {
+  if (
+    pathname === "/admin/login" ||
+    pathname === "/admin/login/verify" ||
+    pathname === "/admin/logout"
+  ) {
     return;
   }
 
