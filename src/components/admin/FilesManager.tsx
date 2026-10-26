@@ -201,11 +201,17 @@ export default function FilesManager() {
     }
   }
 
-  async function handleCopy(url: string) {
+  function shortLink(id: string): string {
+    if (typeof window === "undefined") return `/d/${id}`;
+    return `${window.location.origin}/d/${id}`;
+  }
+
+  async function handleCopy(id: string) {
+    const link = shortLink(id);
     try {
-      await navigator.clipboard.writeText(url);
-      setCopiedUrl(url);
-      setTimeout(() => setCopiedUrl((cur) => (cur === url ? null : cur)), 2000);
+      await navigator.clipboard.writeText(link);
+      setCopiedUrl(id);
+      setTimeout(() => setCopiedUrl((cur) => (cur === id ? null : cur)), 2000);
     } catch {
       setError("No se pudo copiar el enlace.");
     }
@@ -321,7 +327,7 @@ export default function FilesManager() {
                     </div>
                     <div className="flex shrink-0 items-center gap-3 text-sm">
                       <a
-                        href={doc.url}
+                        href={`/d/${doc.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-navy underline hover:text-gold"
@@ -330,10 +336,10 @@ export default function FilesManager() {
                       </a>
                       <button
                         type="button"
-                        onClick={() => handleCopy(doc.url)}
+                        onClick={() => handleCopy(doc.id)}
                         className="rounded-sm border border-navy/20 px-3 py-1 text-navy transition-colors hover:border-gold hover:text-gold"
                       >
-                        {copiedUrl === doc.url ? "Copiado" : "Copiar enlace"}
+                        {copiedUrl === doc.id ? "Copiado" : "Copiar enlace"}
                       </button>
                       <button
                         type="button"

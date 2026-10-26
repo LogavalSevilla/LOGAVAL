@@ -99,7 +99,7 @@ export default async function CatalogosPage() {
                           </p>
                         </div>
                         <a
-                          href={doc.url}
+                          href={`/d/${doc.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="shrink-0 rounded-sm border border-navy/20 px-3 py-1 text-sm text-navy transition-colors hover:border-gold hover:text-gold"
