@@ -56,6 +56,7 @@ export default function FilesManager() {
   const [error, setError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [marca, setMarca] = useState("");
+  const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const loadDocs = useCallback(async () => {
@@ -103,14 +104,25 @@ export default function FilesManager() {
   }, [docs]);
 
   const grupos = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const filtered = q
+      ? docs.filter(
+          (d) =>
+            d.nombre.toLowerCase().includes(q) ||
+            d.marca.toLowerCase().includes(q)
+        )
+      : docs;
     const map = new Map<string, Documento[]>();
-    for (const d of docs) {
+    for (const d of filtered) {
       const key = d.marca || "Sin marca";
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(d);
     }
+    for (const items of map.values()) {
+      items.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    }
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [docs]);
+  }, [docs, search]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -285,22 +297,50 @@ export default function FilesManager() {
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
       </div>
 
-      {grupos.length > 0 && (
-        <a
-          href="/catalogos"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block text-sm text-navy underline hover:text-gold"
-        >
-          Ver catálogo público →
-        </a>
+      {docs.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <a
+            href="/catalogos"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-navy underline hover:text-gold"
+          >
+            Ver catálogo público →
+          </a>
+          <div className="relative w-full max-w-xs sm:w-auto">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-navy/40"
+            >
+              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
+              <path
+                d="m20 20-3.5-3.5"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar catálogo o marca..."
+              className="w-full rounded-sm border border-navy/20 bg-white py-1.5 pl-9 pr-3 text-sm text-navy placeholder:text-navy/40 focus:border-gold focus:outline-none sm:w-64"
+            />
+          </div>
+        </div>
       )}
 
       <div className="space-y-6">
         {loading ? (
           <p className="text-sm text-navy/60">Cargando...</p>
         ) : grupos.length === 0 ? (
-          <p className="text-sm text-navy/60">No hay documentos todavía.</p>
+          <p className="text-sm text-navy/60">
+            {search.trim()
+              ? "No hay catálogos que coincidan con la búsqueda."
+              : "No hay documentos todavía."}
+          </p>
         ) : (
           grupos.map(([nombreMarca, items]) => (
             <div
