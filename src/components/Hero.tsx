@@ -20,7 +20,7 @@ export default function Hero({ dict }: { dict: Dictionary }) {
               {dict.hero.ctaPrimary}
             </a>
             <a
-              href="#products"
+              href="#contact"
               className="rounded-sm border border-navy/20 px-7 py-3.5 text-sm font-semibold tracking-wide text-navy transition-colors hover:border-gold hover:text-gold"
             >
               {dict.hero.ctaSecondary}
