@@ -57,6 +57,7 @@ export function ensureSchema(): Promise<void> {
       )`,
     ])
       .then(() => sql`ALTER TABLE marcas ADD COLUMN IF NOT EXISTS categoria TEXT`)
+      .then(() => sql`ALTER TABLE documentos ADD COLUMN IF NOT EXISTS categoria TEXT`)
       .then(() => undefined);
   }
   return ready;

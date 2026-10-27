@@ -11,6 +11,7 @@ type Documento = {
   url: string;
   size: number;
   fecha: string;
+  categoria: string | null;
 };
 
 function genId(): string {
@@ -240,6 +241,22 @@ export default function FilesManager() {
     }
   }
 
+  async function handleDocCategoriaChange(docId: string, categoria: string) {
+    setDocs((prev) =>
+      prev.map((d) => (d.id === docId ? { ...d, categoria } : d))
+    );
+    try {
+      const res = await fetch(`/admin/api/documentos/${encodeURIComponent(docId)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoria }),
+      });
+      if (!res.ok) throw new Error("No se pudo guardar la categoría");
+    } catch {
+      setError("No se pudo guardar la categoría del documento.");
+    }
+  }
+
   function shortLink(id: string): string {
     if (typeof window === "undefined") return `/d/${id}`;
     return `${window.location.origin}/d/${id}`;
@@ -406,7 +423,21 @@ export default function FilesManager() {
                         {formatSize(doc.size)} · {formatDate(doc.fecha)}
                       </p>
                     </div>
-                    <div className="flex shrink-0 items-center gap-3 text-sm">
+                    <div className="flex shrink-0 flex-wrap items-center gap-3 text-sm">
+                      <select
+                        value={doc.categoria ?? ""}
+                        onChange={(e) =>
+                          handleDocCategoriaChange(doc.id, e.target.value)
+                        }
+                        className="rounded-sm border border-navy/20 bg-white px-2 py-1 text-xs text-navy focus:border-gold focus:outline-none"
+                      >
+                        <option value="">Categoría de la marca</option>
+                        {CATEGORIES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
                       <a
                         href={`/d/${doc.id}`}
                         target="_blank"

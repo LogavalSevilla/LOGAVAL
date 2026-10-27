@@ -18,51 +18,57 @@ type Documento = {
   url: string;
   size: number;
   fecha: string;
+  categoria: string | null;
 };
 
 export default async function CatalogosPage() {
   await ensureSchema();
   const [marcasRows, docsRows] = await Promise.all([
     sql`SELECT nombre, logo_url, categoria FROM marcas`,
-    sql`SELECT id, marca, nombre, url, size, fecha FROM documentos ORDER BY marca ASC, nombre ASC`,
+    sql`SELECT id, marca, nombre, url, size, fecha, categoria FROM documentos ORDER BY marca ASC, nombre ASC`,
   ]);
   const marcas = marcasRows as unknown as Marca[];
   const docs = docsRows as unknown as Documento[];
 
   const marcaInfo = new Map(marcas.map((m) => [m.nombre, m]));
-  const byBrand = new Map<string, Documento[]>();
-  for (const d of docs) {
-    const key = d.marca || "Other";
-    if (!byBrand.has(key)) byBrand.set(key, []);
-    byBrand.get(key)!.push(d);
-  }
 
+  // sectionsMap: categoria -> marca -> documentos that belong in that category
+  // (a brand's own documents can land in different categories depending on
+  // each document's own categoria, falling back to the brand's default)
   const sectionsMap = new Map<
     string,
-    { marca: string; logo: string | null; items: Documento[] }[]
+    Map<string, { marca: string; logo: string | null; items: Documento[] }>
   >();
-  for (const [marca, items] of byBrand) {
+  for (const d of docs) {
+    const marca = d.marca || "Other";
     const info = marcaInfo.get(marca);
     const categoria =
+      (d.categoria && d.categoria.trim()) ||
       (info?.categoria && info.categoria.trim()) ||
       defaultCategoryFor(marca) ||
       "Other";
-    if (!sectionsMap.has(categoria)) sectionsMap.set(categoria, []);
-    sectionsMap.get(categoria)!.push({
-      marca,
-      logo: info?.logo_url ?? null,
-      items,
-    });
+    if (!sectionsMap.has(categoria)) sectionsMap.set(categoria, new Map());
+    const brandsInSection = sectionsMap.get(categoria)!;
+    if (!brandsInSection.has(marca)) {
+      brandsInSection.set(marca, { marca, logo: info?.logo_url ?? null, items: [] });
+    }
+    brandsInSection.get(marca)!.items.push(d);
   }
-  for (const brands of sectionsMap.values()) {
+  const sectionsBrandsMap = new Map<
+    string,
+    { marca: string; logo: string | null; items: Documento[] }[]
+  >();
+  for (const [categoria, brandsInSection] of sectionsMap) {
+    const brands = Array.from(brandsInSection.values());
     brands.sort((a, b) => a.marca.localeCompare(b.marca));
+    sectionsBrandsMap.set(categoria, brands);
   }
   const orderedCategories = [...CATEGORIES, "Other"].filter((c) =>
-    sectionsMap.has(c)
+    sectionsBrandsMap.has(c)
   );
   const sections = orderedCategories.map((categoria) => ({
     categoria,
-    brands: sectionsMap.get(categoria)!,
+    brands: sectionsBrandsMap.get(categoria)!,
   }));
 
   return (

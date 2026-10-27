@@ -17,7 +17,7 @@ export async function GET(
   } else if (collection === "gastos") {
     rows = await sql`SELECT id, num, fecha, empresa, categoria, base, iva FROM gastos ORDER BY fecha DESC`;
   } else if (collection === "documentos") {
-    rows = await sql`SELECT id, marca, nombre, url, size, fecha FROM documentos ORDER BY fecha DESC`;
+    rows = await sql`SELECT id, marca, nombre, url, size, fecha, categoria FROM documentos ORDER BY fecha DESC`;
   } else {
     rows = await sql`SELECT id, prefijo, empresa, tipo FROM reglas`;
   }

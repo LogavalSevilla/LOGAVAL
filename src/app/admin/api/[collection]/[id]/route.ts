@@ -41,17 +41,21 @@ export async function PUT(
         categoria = EXCLUDED.categoria, base = EXCLUDED.base, iva = EXCLUDED.iva
     `;
   } else if (collection === "documentos") {
-    const marca = String(body.marca ?? "");
-    const nombre = String(body.nombre ?? "");
-    const url = String(body.url ?? "");
-    const size = Number(body.size) || 0;
-    const fecha = String(body.fecha ?? "");
+    const existing = await sql`SELECT marca, nombre, url, size, fecha, categoria FROM documentos WHERE id = ${id}`;
+    const prev = existing[0];
+    const marca = body.marca !== undefined ? String(body.marca) : String(prev?.marca ?? "");
+    const nombre = body.nombre !== undefined ? String(body.nombre) : String(prev?.nombre ?? "");
+    const url = body.url !== undefined ? String(body.url) : String(prev?.url ?? "");
+    const size = body.size !== undefined ? Number(body.size) || 0 : Number(prev?.size) || 0;
+    const fecha = body.fecha !== undefined ? String(body.fecha) : String(prev?.fecha ?? "");
+    const categoria =
+      body.categoria !== undefined ? String(body.categoria) : String(prev?.categoria ?? "");
     await sql`
-      INSERT INTO documentos (id, marca, nombre, url, size, fecha)
-      VALUES (${id}, ${marca}, ${nombre}, ${url}, ${size}, ${fecha})
+      INSERT INTO documentos (id, marca, nombre, url, size, fecha, categoria)
+      VALUES (${id}, ${marca}, ${nombre}, ${url}, ${size}, ${fecha}, ${categoria})
       ON CONFLICT (id) DO UPDATE SET
         marca = EXCLUDED.marca, nombre = EXCLUDED.nombre, url = EXCLUDED.url,
-        size = EXCLUDED.size, fecha = EXCLUDED.fecha
+        size = EXCLUDED.size, fecha = EXCLUDED.fecha, categoria = EXCLUDED.categoria
     `;
   } else {
     const prefijo = String(body.prefijo ?? "");
