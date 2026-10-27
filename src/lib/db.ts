@@ -52,9 +52,12 @@ export function ensureSchema(): Promise<void> {
       )`,
       sql`CREATE TABLE IF NOT EXISTS marcas (
         nombre TEXT PRIMARY KEY,
-        logo_url TEXT
+        logo_url TEXT,
+        categoria TEXT
       )`,
-    ]).then(() => undefined);
+    ])
+      .then(() => sql`ALTER TABLE marcas ADD COLUMN IF NOT EXISTS categoria TEXT`)
+      .then(() => undefined);
   }
   return ready;
 }

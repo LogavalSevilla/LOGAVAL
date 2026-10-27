@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
+import { CATEGORIES, defaultCategoryFor } from "@/lib/categories";
 
 type Documento = {
   id: string;
@@ -48,6 +49,7 @@ function formatDate(iso: string): string {
 export default function FilesManager() {
   const [docs, setDocs] = useState<Documento[]>([]);
   const [logos, setLogos] = useState<Record<string, string>>({});
+  const [categorias, setCategorias] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadingLogoFor, setUploadingLogoFor] = useState<string | null>(null);
@@ -64,12 +66,23 @@ export default function FilesManager() {
       ]);
       if (!docsRes.ok || !marcasRes.ok) throw new Error("No se pudo cargar la lista");
       const docsData = await docsRes.json();
-      const marcasData: { nombre: string; logo_url: string | null }[] =
-        await marcasRes.json();
+      const marcasData: {
+        nombre: string;
+        logo_url: string | null;
+        categoria: string | null;
+      }[] = await marcasRes.json();
       setDocs(docsData);
       setLogos(
         Object.fromEntries(
           marcasData.filter((m) => m.logo_url).map((m) => [m.nombre, m.logo_url as string])
+        )
+      );
+      setCategorias(
+        Object.fromEntries(
+          marcasData.map((m) => [
+            m.nombre,
+            (m.categoria && m.categoria.trim()) || defaultCategoryFor(m.nombre) || "",
+          ])
         )
       );
     } catch {
@@ -201,6 +214,20 @@ export default function FilesManager() {
     }
   }
 
+  async function handleCategoriaChange(marcaNombre: string, categoria: string) {
+    setCategorias((prev) => ({ ...prev, [marcaNombre]: categoria }));
+    try {
+      const res = await fetch("/admin/api/marcas", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: marcaNombre, categoria }),
+      });
+      if (!res.ok) throw new Error("No se pudo guardar la categoría");
+    } catch {
+      setError("No se pudo guardar la categoría.");
+    }
+  }
+
   function shortLink(id: string): string {
     if (typeof window === "undefined") return `/d/${id}`;
     return `${window.location.origin}/d/${id}`;
@@ -296,7 +323,21 @@ export default function FilesManager() {
                 <h2 className="text-sm font-semibold text-navy">
                   {nombreMarca}
                 </h2>
-                <label className="ml-auto cursor-pointer text-xs text-navy/50 underline hover:text-gold">
+                <select
+                  value={categorias[nombreMarca] ?? ""}
+                  onChange={(e) =>
+                    handleCategoriaChange(nombreMarca, e.target.value)
+                  }
+                  className="ml-auto rounded-sm border border-navy/20 bg-white px-2 py-1 text-xs text-navy focus:border-gold focus:outline-none"
+                >
+                  <option value="">Sin categoría</option>
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <label className="cursor-pointer text-xs text-navy/50 underline hover:text-gold">
                   {uploadingLogoFor === nombreMarca
                     ? "Subiendo logo..."
                     : logos[nombreMarca]
