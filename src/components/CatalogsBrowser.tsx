@@ -27,7 +27,7 @@ function formatSize(bytes: number): string {
 }
 
 function CategoryIcon({ categoria }: { categoria: string }) {
-  const cls = "h-6 w-6";
+  const cls = "h-8 w-8";
   switch (categoria) {
     case "Small Size Tiles":
       return (
@@ -175,7 +175,7 @@ export default function CatalogsBrowser({ sections }: { sections: Section[] }) {
   }
 
   return (
-    <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {sections.map((s) => {
         const catalogCount = s.brands.reduce(
           (n, b) => n + b.items.length,
@@ -186,16 +186,16 @@ export default function CatalogsBrowser({ sections }: { sections: Section[] }) {
             key={s.categoria}
             type="button"
             onClick={() => setActive(s.categoria)}
-            className="flex items-center gap-3 rounded-sm border border-navy/15 bg-white px-4 py-4 text-left transition-colors hover:border-gold"
+            className="flex items-center gap-5 rounded-sm border border-navy bg-navy px-6 py-8 text-left transition-colors hover:border-gold hover:bg-navy-light"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm bg-navy/5 text-navy">
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-sm bg-cream/10 text-gold">
               <CategoryIcon categoria={s.categoria} />
             </span>
             <span className="min-w-0">
-              <span className="block text-sm font-semibold text-navy">
+              <span className="block text-lg font-semibold text-cream">
                 {s.categoria}
               </span>
-              <span className="block text-xs text-navy/50">
+              <span className="mt-1 block text-sm text-cream/60">
                 {s.brands.length} brand{s.brands.length === 1 ? "" : "s"} ·{" "}
                 {catalogCount} catalog{catalogCount === 1 ? "" : "s"}
               </span>
