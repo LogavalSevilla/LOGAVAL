@@ -579,6 +579,38 @@ var state={ingresos:SEED_INGRESOS,gastos:SEED_GASTOS,kind:"in",list:"in",editId:
     });
     return out;
   }
+  function parseFreeText(text){
+    var dateMatch=text.match(/\b\d{4}-\d{1,2}-\d{1,2}\b/)||text.match(/\b\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}\b/);
+    var fecha=dateMatch?pDate(dateMatch[0]):"";
+
+    var baseMatch=text.match(/base\s+imponible[^\d]{0,15}([\d.,]+)/i);
+    var base=baseMatch?pNum(baseMatch[1]):0;
+
+    var iva=0,ivaLine=text.match(/total\s+iva[^\n]*/i)||text.match(/^\s*iva[^\n]*/im);
+    if(ivaLine){
+      var nums=ivaLine[0].match(/\d+[.,]\d{2}\b/g);
+      if(nums&&nums.length)iva=pNum(nums[nums.length-1]);
+    }
+
+    var num="";
+    var hdrIdx=text.search(/n[uú]mero\s+fecha/i);
+    if(hdrIdx>=0){
+      var after=text.slice(hdrIdx).split(/\r?\n/).slice(1);
+      for(var i=0;i<after.length;i++){
+        var tok=(after[i].trim().split(/\s+/)[0]||"");
+        if(/[A-Za-z0-9]{4,}/.test(tok)){num=tok;break}
+      }
+    }
+    if(!num){
+      var numMatch=text.match(/factura\s*n[ºo°]?\.?\s*:?\s*([A-Za-z0-9\-\/]{3,})/i)||text.match(/n[ºo°]\.?\s*factura\s*:?\s*([A-Za-z0-9\-\/]{3,})/i);
+      if(numMatch)num=numMatch[1];
+    }
+
+    var who=text.split(/\r?\n/).map(function(l){return l.trim()}).filter(Boolean)[0]||"";
+
+    if(!num&&!base)return[];
+    return[{tipo:state.kind,num:num,fecha:fecha||new Date().toISOString().slice(0,10),who:who,categoria:"Otros",base:base,iva:iva}];
+  }
   function readPdf(file){
     if(!window.pdfjsLib)return Promise.reject(new Error("No se pudo cargar el lector de PDF."));
     pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -603,8 +635,8 @@ var state={ingresos:SEED_INGRESOS,gastos:SEED_GASTOS,kind:"in",list:"in",editId:
     });
   }
   function isDupe(r){
-    return(r.tipo==="in"?state.ingresos:state.gastos).some(function(x){return x.num===r.num&&(r.tipo==="in"?x.fabricante:x.empresa)===r.who})
-      ||pending.some(function(x){return x!==r&&x.tipo===r.tipo&&x.num===r.num&&x.who===r.who&&x.idx<r.idx});
+    return(r.tipo==="in"?state.ingresos:state.gastos).some(function(x){return x.num===r.num&&norm(r.tipo==="in"?x.fabricante:x.empresa)===norm(r.who)})
+      ||pending.some(function(x){return x!==r&&x.tipo===r.tipo&&x.num===r.num&&norm(x.who)===norm(r.who)&&x.idx<r.idx});
   }
   function impMsg(t,err){var m=$("impMsg");m.textContent=t;m.className="msg"+(err?" err":"")}
   function handleFiles(files){
@@ -617,6 +649,7 @@ var state={ingresos:SEED_INGRESOS,gastos:SEED_GASTOS,kind:"in",list:"in",editId:
         return(isPdf?readPdf(f):f.text()).then(function(text){
           if(!text||text.replace(/\s/g,"").length<20)throw new Error("no tiene texto legible (¿PDF escaneado?)");
           var rows=isPdf?[]:parseMdTable(text);
+          if(!rows.length)rows=parseFreeText(text);
           return rows.length?rows:aiExtract(text,f.name);
         }).then(function(rows){
           if(!rows.length)throw new Error("no se encontraron facturas");
