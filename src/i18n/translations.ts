@@ -102,7 +102,7 @@ const en: Dictionary = {
     stats: [
       { value: "20", label: "years of experience" },
       { value: "6", label: "GCC countries" },
-      { value: "15", label: "manufacturers" },
+      { value: "14", label: "manufacturers" },
       { value: "3", label: "contract partners" },
     ],
     countries: [
@@ -146,13 +146,12 @@ const en: Dictionary = {
     italyTitle: "Italy: design and premium collections",
     italyBody:
       "Italian manufacturers add design-led collections and premium finishes, often specified in high-end residential and hospitality projects.",
-    spainLabel: "Spain (13)",
+    spainLabel: "Spain (12)",
     italyLabel: "Italy (2)",
     spainManufacturers: [
       "Azuvi",
       "Geotiles",
       "Ascale",
-      "Kerlife",
       "Mainzu",
       "Mayor",
       "Paula Purroy",
@@ -251,7 +250,7 @@ const es: Dictionary = {
     stats: [
       { value: "20", label: "años de experiencia" },
       { value: "6", label: "países del GCC" },
-      { value: "15", label: "fabricantes" },
+      { value: "14", label: "fabricantes" },
       { value: "3", label: "colaboradores contract" },
     ],
     countries: [
@@ -295,13 +294,12 @@ const es: Dictionary = {
     italyTitle: "Italia: diseño y colecciones premium",
     italyBody:
       "Los fabricantes italianos aportan colecciones de diseño y acabados premium, muy presentes en proyectos residenciales de alta gama y hoteleros.",
-    spainLabel: "España (13)",
+    spainLabel: "España (12)",
     italyLabel: "Italia (2)",
     spainManufacturers: [
       "Azuvi",
       "Geotiles",
       "Ascale",
-      "Kerlife",
       "Mainzu",
       "Mayor",
       "Paula Purroy",
@@ -400,7 +398,7 @@ const it: Dictionary = {
     stats: [
       { value: "20", label: "anni di esperienza" },
       { value: "6", label: "paesi del GCC" },
-      { value: "15", label: "produttori" },
+      { value: "14", label: "produttori" },
       { value: "3", label: "partner contract" },
     ],
     countries: [
@@ -444,13 +442,12 @@ const it: Dictionary = {
     italyTitle: "Italia: design e collezioni premium",
     italyBody:
       "I produttori italiani offrono collezioni di design e finiture di pregio, spesso scelte per progetti residenziali di alta gamma e per l'hospitality.",
-    spainLabel: "Spagna (13)",
+    spainLabel: "Spagna (12)",
     italyLabel: "Italia (2)",
     spainManufacturers: [
       "Azuvi",
       "Geotiles",
       "Ascale",
-      "Kerlife",
       "Mainzu",
       "Mayor",
       "Paula Purroy",
