@@ -15,12 +15,12 @@ export default function About({
 
   return (
     <section id="about" className="bg-navy text-cream">
-      <div className="mx-auto max-w-7xl px-6 py-16 lg:px-10 lg:py-20">
+      <div className="mx-auto max-w-7xl px-6 py-16 text-center lg:px-10 lg:py-20">
         <p className="text-sm font-semibold tracking-[0.3em] text-gold">
           {nav.about.toUpperCase()}
         </p>
 
-        <div className="max-w-3xl">
+        <div className="mx-auto max-w-3xl">
           <h2 className="mt-3 font-serif text-3xl text-cream sm:text-4xl">
             {about.title}
           </h2>
