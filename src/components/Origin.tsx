@@ -3,7 +3,7 @@ import { sql, ensureSchema } from "@/lib/db";
 
 type Marca = { nombre: string; logo_url: string | null };
 
-function ManufacturerChip({
+function ManufacturerCard({
   name,
   logoUrl,
 }: {
@@ -11,18 +11,23 @@ function ManufacturerChip({
   logoUrl?: string;
 }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-sm border border-navy/15 bg-white px-3 py-1.5 text-sm text-navy/80">
+    <div className="flex shrink-0 items-center gap-3 rounded-lg border border-navy/10 bg-white px-5 py-4 shadow-sm">
       {logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={logoUrl} alt={name} className="h-5 w-5 object-contain" />
-      ) : null}
-      {name}
-    </span>
+        <img src={logoUrl} alt={name} className="h-9 w-9 shrink-0 rounded-sm object-contain" />
+      ) : (
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy/10 text-xs font-semibold text-navy">
+          {name.slice(0, 2).toUpperCase()}
+        </span>
+      )}
+      <span className="whitespace-nowrap font-semibold text-navy">{name}</span>
+    </div>
   );
 }
 
 export default async function Origin({ dict }: { dict: Dictionary }) {
   const { origin, nav } = dict;
+  const manufacturers = [...origin.spainManufacturers, ...origin.italyManufacturers];
 
   let logoByName = new Map<string, string>();
   try {
@@ -63,34 +68,15 @@ export default async function Origin({ dict }: { dict: Dictionary }) {
           </div>
         </div>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2">
-          <div className="rounded-sm border border-navy/15 p-6">
-            <p className="text-xs font-semibold tracking-[0.25em] text-gold">
-              {origin.spainLabel}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {origin.spainManufacturers.map((name) => (
-                <ManufacturerChip
-                  key={name}
-                  name={name}
-                  logoUrl={logoByName.get(name.trim().toLowerCase())}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="rounded-sm border border-navy/15 p-6">
-            <p className="text-xs font-semibold tracking-[0.25em] text-gold">
-              {origin.italyLabel}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {origin.italyManufacturers.map((name) => (
-                <ManufacturerChip
-                  key={name}
-                  name={name}
-                  logoUrl={logoByName.get(name.trim().toLowerCase())}
-                />
-              ))}
-            </div>
+        <div className="mt-14 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
+          <div className="flex w-max animate-marquee gap-4 hover:[animation-play-state:paused]">
+            {[...manufacturers, ...manufacturers].map((name, i) => (
+              <ManufacturerCard
+                key={`${name}-${i}`}
+                name={name}
+                logoUrl={logoByName.get(name.trim().toLowerCase())}
+              />
+            ))}
           </div>
         </div>
       </div>
