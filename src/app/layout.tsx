@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Manrope } from "next/font/google";
+import ScrollToTop from "@/components/ScrollToTop";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -27,6 +28,7 @@ export default function RootLayout({
     <html lang="en" className={`${playfair.variable} ${manrope.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-cream text-navy">
         {children}
+        <ScrollToTop />
       </body>
     </html>
   );
